@@ -1,1215 +1,1024 @@
-local Bracket = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Bracket/main/BracketV33.lua"))()
-
-local Window = Bracket:Window({
-	Name = "TYPE://SOUL [UPDATE W.I.P] DROWNED HUB",
-	Enabled = true,
-	Color = Color3.new(0.313725, 0.356862, 0.925490),
-	Size = UDim2.new(0, 450, 0, 496),
-	Position = UDim2.new(0.6, -247, 0.4, -243),
-})
-
-local Watermark = Window:Watermark({
-	Title = "[Drowned Hub]",
-	Flag = "UI/Watermark/Position",
-	Enabled = true,
-})
-
-local MainTab = Window:Tab({ Name = "Main" })
-local FarmTab = Window:Tab({ Name = "Farm" })
-local StatsTab = Window:Tab({ Name = "AutoStats" })
-local VisualTab = Window:Tab({ Name = "Visual" })
-local SkillTab = Window:Tab({ Name = "AutoSkill" })
-local MiscTab = Window:Tab({ Name = "Misc" })
-local OptionsTab = Window:Tab({ Name = "Options" })
-
-local MainSection = MainTab:Section({ Name = "MainSection", Side = "left" })
-local MainSection2 = MainTab:Section({ Name = "Others", Side = "Right" })
-
-MainSection:Divider()
-local AdvancedSpeedModdes = "Velocity"
-local AdvancedSpeedVal = 25
-local SpeedKeepJump = false
-local SpeedKeepJumpReal = false
-local SpeedWallCheck = false
-local SpeedBypassDelay = 1.103300000000001
-local SpeedBypassDuration = 2.5178200000000004
-local FakeJumpHeight = 6
-
-players = game:GetService("Players")
-speaker = players.LocalPlayer or player:GetPropertyChangedSignal("LocalPlayer"):Wait() and players.LocalPlayer
-Mouse = speaker:GetMouse()
-char = speaker.Character or speaker.CharacterAdded:Wait()
-
-workspace = game:GetService("Workspace")
-Camera = workspace.CurrentCamera
-
-CGUI = game:GetService("CoreGui")
-SGUI = game:GetService("StarterGui")
-GUIS = game:GetService("GuiService")
-ChatService = game:GetService("Chat")
-Lighting = game:GetService("Lighting")
-UIS = game:GetService("UserInputService")
-DebrisService = game:GetService("Debris")
-RunService = game:GetService("RunService")
-MS = game:GetService("MarketplaceService")
-HttpService = game:GetService("HttpService")
-CAS = game:GetService("ContextActionService")
-SoundService = game:GetService("SoundService")
-TweenService = game:GetService("TweenService")
-NetworkClient = game:GetService("NetworkClient")
-TeleportService = game:GetService("TeleportService")
-textChatService = game:GetService("TextChatService")
-MaterialService = game:GetService("MaterialService")
-ReplicatedStorage = game:GetService("ReplicatedStorage")
-PathfindingService = game:GetService("PathfindingService")
-ProximityPromptService = game:GetService("ProximityPromptService")
-
-local RunLoops = {
-	RenderStepTable = {},
-	StepTable = {},
-	HeartTable = {},
-}
-
-do
-	function RunLoops:BindToRenderStep(name, func)
-		if RunLoops.RenderStepTable[name] == nil then
-			RunLoops.RenderStepTable[name] = RunService.RenderStepped:Connect(func)
-		end
-	end
-
-	function RunLoops:UnbindFromRenderStep(name)
-		if RunLoops.RenderStepTable[name] then
-			RunLoops.RenderStepTable[name]:Disconnect()
-			RunLoops.RenderStepTable[name] = nil
-		end
-	end
-
-	function RunLoops:BindToStepped(name, func)
-		if RunLoops.StepTable[name] == nil then
-			RunLoops.StepTable[name] = RunService.Stepped:Connect(func)
-		end
-	end
-
-	function RunLoops:UnbindFromStepped(name)
-		if RunLoops.StepTable[name] then
-			RunLoops.StepTable[name]:Disconnect()
-			RunLoops.StepTable[name] = nil
-		end
-	end
-
-	function RunLoops:BindToHeartbeat(name, func)
-		if RunLoops.HeartTable[name] == nil then
-			RunLoops.HeartTable[name] = RunService.Heartbeat:Connect(func)
-		end
-	end
-
-	function RunLoops:UnbindFromHeartbeat(name)
-		if RunLoops.HeartTable[name] then
-			RunLoops.HeartTable[name]:Disconnect()
-			RunLoops.HeartTable[name] = nil
-		end
-	end
-end
-
-function r15(plr)
-	if plr.Character:FindFirstChildOfClass("Humanoid").RigType == Enum.HumanoidRigType.R15 then
-		return true
-	end
-end
-function getRoot(char)
-	local rootPart = char:FindFirstChild("HumanoidRootPart")
-		or char:FindFirstChild("Torso")
-		or char:FindFirstChild("UpperTorso")
-	return rootPart
-end
-function tools(plr)
-	if
-		plr:FindFirstChildOfClass("Backpack"):FindFirstChildOfClass("Tool")
-		or plr.Character:FindFirstChildOfClass("Tool")
-	then
-		return true
-	end
-end
-function isNumber(num)
-	if tonumber(num) ~= nil or num == "inf" then
-		return true
-	end
-end
-function copyTool(path)
-	for i, c in pairs(path:GetDescendants()) do
-		if c:IsA("Tool") or c:IsA("HopperBin") then
-			c:Clone().Parent = speaker:FindFirstChildOfClass("Backpack")
-		end
-		copyTool(c)
-	end
-end
-function findTouchInterest(tool)
-	return tool and tool:FindFirstChildWhichIsA("TouchTransmitter", true)
-end
-function say(message)
-	ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
-		:WaitForChild("SayMessageRequest")
-		:FireServer(message, "All")
-end
-function isAlive()
-	if getRoot(speaker.Character) then
-		return true
-	end
-end
-
-AdvancedSpede = false
-getgenv().Speed = false
-local SpeedToggle = MainSection:Toggle({
-	Name = "Speed",
-	Callback = function(Value)
-		SpeedToggleState = Value
-		if Value then
-			local BypassTick = tick()
-			task.spawn(function()
-				repeat
-					BypassTick = tick() + (SpeedBypassDuration / 100)
-					task.wait((SpeedBypassDelay / 10) + (SpeedBypassDuration / 100))
-				until AdvancedSpede == false
-			end)
-
-			RunLoops:BindToHeartbeat("AdvancedSpeed", function(dt)
-				if not getRoot(speaker.Character) then
-					return
-				end
-
-				local Speed = AdvancedSpeedVal
-				local Humanoid = speaker.character.Humanoid
-				local RootPart = speaker.character:WaitForChild("HumanoidRootPart")
-				local MoveDirection = Humanoid.MoveDirection
-				local Velocity = RootPart.Velocity
-				local X, Z = MoveDirection.X * Speed, MoveDirection.Z * Speed
-
-				if AdvancedSpeedModdes == "Velocity" then
-					RootPart.Velocity = Vector3.new(X, Velocity.Y, Z)
-				elseif AdvancedSpeedModdes == "CFrame" then
-					local Factor = Speed - Humanoid.WalkSpeed
-					local MoveDirection = (MoveDirection * Factor) * dt
-					local newpos = (MoveDirection * (math.max(Speed - speaker.character.Humanoid.WalkSpeed, 0) * dt))
-					if SpeedWallCheck == true then
-						local ray = workspace:Raycast(speaker.character.HumanoidRootPart.Position, newpos, SpeedRaycast)
-						if ray then
-							newpos = (ray.Position - speaker.character.HumanoidRootPart.Position)
-						end
-					end
-
-					RootPart.CFrame = RootPart.CFrame + newpos
-				elseif AdvancedSpeedModdes == "Linear Velocity" then
-					LinearVelocity = speaker.character.HumanoidRootPart:FindFirstChildOfClass("LinearVelocity")
-						or Instance.new("LinearVelocity", speaker.character.HumanoidRootPart)
-					LinearVelocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Line
-					LinearVelocity.Attachment0 = speaker.character.HumanoidRootPart:FindFirstChildOfClass("Attachment")
-					LinearVelocity.MaxForce = 9e9
-					LinearVelocity.LineDirection = MoveDirection
-					LinearVelocity.LineVelocity = (MoveDirection.X ~= 0 and MoveDirection.Z) and Speed or 0
-				elseif AdvancedSpeedModdes == "ASM Linear Velocity" then
-					RootPart.AssemblyLinearVelocity = Vector3.new(X, Velocity.Y, Z)
-				elseif AdvancedSpeedModdes == "Body Velocity" then
-					BodyVelocity = speaker.character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity")
-						or Instance.new("BodyVelocity", speaker.character.HumanoidRootPart)
-					BodyVelocity.Velocity = Vector3.new(X, 2, Z)
-					BodyVelocity.MaxForce = Vector3.new(9e9, 0, 9e9)
-				elseif AdvancedSpeedModdes == "Bypass" then
-					local pulsenum = (SpeedBypassDuration / 100)
-					local newvelo = MoveDirection
-						* (
-							Speed
-							+ (speaker.character.Humanoid.WalkSpeed - Speed)
-								* (1 - (math.max(BypassTick - tick(), 0)) / pulsenum)
-						)
-					RootPart.Velocity = Vector3.new(newvelo.X, RootPart.Velocity.Y, newvelo.Z)
-				end
-
-				if SpeedKeepJump == true then
-					local State = speaker.character.Humanoid:GetState()
-					local MoveDirection = speaker.character.Humanoid.MoveDirection
-					if State == Enum.HumanoidStateType.Running and MoveDirection ~= Vector3.zero then
-						if SpeedKeepJumpReal == true then
-							speaker.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						else
-							speaker.character.HumanoidRootPart.Velocity = Vector3.new(
-								speaker.character.HumanoidRootPart.Velocity.X,
-								FakeJumpHeight,
-								speaker.character.HumanoidRootPart.Velocity.Z
-							)
-						end
-					end
-				end
-			end)
-		else
-			SpeedDelayTick = 0
-			RunLoops:UnbindFromHeartbeat("AdvancedSpeed")
-
-			if LinearVelocity then
-				LinearVelocity:Destroy()
-				LinearVelocity = nil
-			end
-			if BodyVelocity then
-				BodyVelocity:Destroy()
-				BodyVelocity = nil
-			end
-		end
-	end,
-})
-local SpeedKeybind = SpeedToggle:Keybind({ Name = "Speed Keybind", Flag = "Main/Speed/Keybind", Default = "LeftShift" })
-
-MainSection:Slider({
-	Name = "Speed Slider",
-	Flag = "Main/Speed",
-	Min = 0,
-	Max = 250,
-	Value = 0,
-	Callback = function(Value)
-		AdvancedSpeedVal = Value
-	end,
-})
-
-function calculateMoveVector(cameraRelativeMoveVector)
-	local c, s
-	local _, _, _, R00, R01, R02, _, _, R12, _, _, R22 = Camera.CFrame:GetComponents()
-	if R12 < 1 and R12 > -1 then
-		c = R22
-		s = R02
-	else
-		c = R00
-		s = -R01 * math.sign(R12)
-	end
-	local norm = math.sqrt(c * c + s * s)
-	return Vector3.new(
-		(c * cameraRelativeMoveVector.X + s * cameraRelativeMoveVector.Z) / norm,
-		0,
-		(c * cameraRelativeMoveVector.Z - s * cameraRelativeMoveVector.X) / norm
-	)
-end
-
-local FlyRaycast = RaycastParams.new()
-FlyRaycast.FilterType = Enum.RaycastFilterType.Blacklist
-FlyRaycast.RespectCanCollide = true
-local FlyJumpCFrame = CFrame.new(0, 0, 0)
-local FlyAliveCheck = false
-local FlyUp = false
-local FlyDown = false
-local FlyY = 0
-local FlightFloorPart
-local w = 0
-local s = 0
-local a = 0
-local d = 0
-local FlightConnections = {}
-
-function split(str, delim)
-	local broken = {}
-	if delim == nil then
-		delim = ","
-	end
-	for w in string.gmatch(str, "[^" .. delim .. "]+") do
-		table.insert(broken, w)
-	end
-	return broken
-end
-
-local FlyKeys = "E/Q"
-local FlightWallCheck = true
-local FlightVerticalSpeed = 35
-local FlightSpeed = 35
-local FlightMode = "Bypass"
-local FlightState = nil
-local FlyToggle = MainSection:Toggle({
-	Name = "Fly",
-	Callback = function(state)
-		if state then
-			local FlyPlatformTick = tick() + 0.2
-			w = UIS:IsKeyDown(Enum.KeyCode.W) and -1 or 0
-			s = UIS:IsKeyDown(Enum.KeyCode.S) and 1 or 0
-			a = UIS:IsKeyDown(Enum.KeyCode.A) and -1 or 0
-			d = UIS:IsKeyDown(Enum.KeyCode.D) and 1 or 0
-
-			local FlyVDirection = 0
-			local FlyUp = false
-			local FlyDown = false
-
-			table.insert(
-				FlightConnections,
-				UIS.InputBegan:Connect(function(input1)
-					if UIS:GetFocusedTextBox() ~= nil then
-						return
-					end
-					if input1.KeyCode == Enum.KeyCode.W then
-						w = -1
-					elseif input1.KeyCode == Enum.KeyCode.S then
-						s = 1
-					elseif input1.KeyCode == Enum.KeyCode.A then
-						a = -1
-					elseif input1.KeyCode == Enum.KeyCode.D then
-						d = 1
-					end
-					local divided = FlyKeys:split("/")
-					if input1.KeyCode == Enum.KeyCode[divided[1]] then
-						FlyUp = true
-					elseif input1.KeyCode == Enum.KeyCode[divided[2]] then
-						FlyDown = true
-					end
-				end)
-			)
-			table.insert(
-				FlightConnections,
-				UIS.InputEnded:Connect(function(input1)
-					local divided = FlyKeys:split("/")
-					if input1.KeyCode == Enum.KeyCode.W then
-						w = 0
-					elseif input1.KeyCode == Enum.KeyCode.S then
-						s = 0
-					elseif input1.KeyCode == Enum.KeyCode.A then
-						a = 0
-					elseif input1.KeyCode == Enum.KeyCode.D then
-						d = 0
-					elseif input1.KeyCode == Enum.KeyCode[divided[1]] then
-						FlyUp = false
-					elseif input1.KeyCode == Enum.KeyCode[divided[2]] then
-						FlyDown = false
-					end
-				end)
-			)
-
-			if FlightMode == "Jump" and isAlive() then
-				speaker.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-			end
-
-			local FlyTP = false
-			local FlyTPTick = tick()
-			local FlyTPY
-
-			RunLoops:BindToHeartbeat("Fly", function(delta)
-				if isAlive() then
-					if not FlyY then
-						FlyY = speaker.character.HumanoidRootPart.CFrame.p.Y
-					end
-					local movevec = (
-						FlightMoveMethod == "Manual" and calculateMoveVector(Vector3.new(a + d, 0, w + s))
-						or speaker.character.Humanoid.MoveDirection
-					).Unit
-					movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.zero
-
-					if FlightState ~= "none" then
-						if FlightMode == "Velocity" then
-							speaker.character.Humanoid:ChangeState(Enum.HumanoidStateType[FlightState])
-						end
-					end
-
-					if FlightNoVelo == true then
-						speaker.Character.HumanoidRootPart.Velocity = Vector3.zero
-					end
-
-					if FlightMode == "Velocity" or FlightMode == "Bypass" then
-						speaker.character.HumanoidRootPart.Velocity = (movevec * FlightSpeed)
-							+ Vector3.new(
-								0,
-								0.85
-									+ (FlightMode == "Bypass" and (tick() % 0.5 > 0.25 and -10 or 10) or 0)
-									+ (FlyUp and FlightVerticalSpeed or 0)
-									+ (FlyDown and -FlightVerticalSpeed or 0),
-								0
-							)
-					else
-						if FlyUp then
-							FlyY = FlyY + (FlightVerticalSpeed * delta)
-						end
-						if FlyDown then
-							FlyY = FlyY - (FlightVerticalSpeed * delta)
-						end
-
-						local newMovementPosition = (
-							movevec * (math.max(FlightSpeed - speaker.character.Humanoid.WalkSpeed, 0) * delta)
-						)
-						newMovementPosition = Vector3.new(
-							newMovementPosition.X,
-							(FlyY - speaker.character.HumanoidRootPart.CFrame.p.Y),
-							newMovementPosition.Z
-						)
-
-						if FlightWallCheck == true then
-							FlyRaycast.FilterDescendantsInstances = { speaker.Character, Camera }
-							local ray = workspace:Raycast(
-								speaker.character.HumanoidRootPart.Position,
-								newMovementPosition,
-								FlyRaycast
-							)
-							if ray and ray.Instance.CanCollide then
-								newMovementPosition = (ray.Position - speaker.character.HumanoidRootPart.Position)
-								FlyY = ray.Position.Y
-							end
-						end
-
-						if FlightMode == "CFrame" then
-							speaker.character.HumanoidRootPart.CFrame = speaker.character.HumanoidRootPart.CFrame
-								+ newMovementPosition
-						elseif FlightMode == "Jump" then
-							speaker.character.HumanoidRootPart.CFrame = speaker.character.HumanoidRootPart.CFrame
-								+ Vector3.new(newMovementPosition.X, 0, newMovementPosition.Z)
-							if
-								speaker.character.HumanoidRootPart.Velocity.Y
-								< -(
-									speaker.character.Humanoid.JumpPower
-									- ((FlyUp and FlightVerticalSpeed or 0) - (FlyDown and FlightVerticalSpeed or 0))
-								)
-							then
-								FlyJumpCFrame = speaker.character.HumanoidRootPart.CFrame
-									* CFrame.new(0, -speaker.character.Humanoid.HipHeight, 0)
-								speaker.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-							end
-						elseif FlightMode == "Teleport" then
-							if FlyTPTick <= tick() then
-								FlyTP = not FlyTP
-								if FlyTP then
-									if FlyTPY then
-										FlyY = FlyTPY
-									end
-								else
-									FlyTPY = FlyY
-									FlyRaycast.FilterDescendantsInstances = { speaker.Character, Camera }
-									local ray = workspace:Raycast(
-										speaker.character.HumanoidRootPart.Position,
-										Vector3.new(0, -10000, 0),
-										FlyRaycast
-									)
-									if ray then
-										FlyY = ray.Position.Y
-											+ (
-												(speaker.character.HumanoidRootPart.Size.Y / 2)
-												+ speaker.character.Humanoid.HipHeight
-											)
-									end
-								end
-								FlyTPTick = tick() + ((FlyTP and FlightTpOn or FlightTpOff) / 10)
-							end
-							speaker.character.HumanoidRootPart.CFrame = speaker.character.HumanoidRootPart.CFrame
-								+ newMovementPosition
-						end
-
-						if FlightFloor == true then
-							FlightFloorPart = FlightFloorPart or Instance.new("Part", workspace)
-							FlightFloorPart.CanQuery = false
-							FlightFloorPart.Anchored = true
-							FlightFloorPart.CanCollide = true
-							FlightFloorPart.Material = 288
-							FlightFloorPart.Color = Library.colors.main
-							FlightFloorPart.Size = Vector3.new(3, 0.5, 3)
-							FlightFloorPart.CFrame = (
-								FlightMode == "Jump" and FlyJumpCFrame
-								or speaker.character.HumanoidRootPart.CFrame
-									* CFrame.new(
-										0,
-										-(
-												speaker.character.Humanoid.HipHeight
-												+ (speaker.character.HumanoidRootPart.Size.Y / 2)
-												+ 0.53
-											),
-										0
-									)
-							)
-							FlightFloorPart.Transparency = 0.5
-
-							if FlyUp or FlyPlatformTick >= tick() then
-								speaker.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
-							end
-						else
-							if FlightFloorPart then
-								FlightFloorPart:Destroy()
-								FlightFloorPart = nil
-							end
-						end
-					end
-				else
-					FlyY = nil
-				end
-			end)
-		else
-			FlyUp = false
-			FlyDown = false
-			FlyY = nil
-			RunLoops:UnbindFromHeartbeat("Fly")
-			FlightConnections = {}
-			if FlightFloorPart then
-				FlightFloorPart:Destroy()
-				FlightFloorPart = nil
-			end
-			speaker.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
-		end
-	end,
-})
-
-local FlyKeybind = FlyToggle:Keybind({ Name = "Fly Keybind", Flag = "Main/Fly/Keybind", Default = "X" })
-MainSection:Slider({
-	Name = "Fly Slider",
-	Flag = "Main/Fly",
-	Min = 0,
-	Max = 250,
-	Value = 0,
-	Callback = function(Value)
-		FlightSpeed = Value
-		FlightVerticalSpeed = Value
-	end,
-})
-
-local PhaseRaycast = RaycastParams.new()
-PhaseRaycast.RespectCanCollide = true
-PhaseRaycast.FilterType = Enum.RaycastFilterType.Blacklist
-
-local PhaseOverlap = OverlapParams.new()
-PhaseOverlap.MaxParts = 9e9
-PhaseOverlap.FilterDescendantsInstances = {}
-local PhaseModifiedParts = {}
-
-local NoclipToggle = MainSection:Toggle({
-	Name = "Noclip",
-	Callback = function(state)
-		if state then
-			RunLoops:BindToStepped("NoclipAround", function()
-				local chars = { Camera, speaker.Character }
-				for i, v in pairs(players:GetPlayers()) do
-					table.insert(chars, v.Character)
-				end
-
-				PhaseOverlap.FilterDescendantsInstances = chars
-				local rootpos = speaker.character.HumanoidRootPart.CFrame.p
-				local parts = workspace:GetPartBoundsInRadius(rootpos, 2, PhaseOverlap)
-
-				for i, v in pairs(parts) do
-					if
-						v.CanCollide
-						and (v.Position.Y + (v.Size.Y / 2)) > (rootpos.Y - speaker.character.Humanoid.HipHeight)
-					then
-						PhaseModifiedParts[v] = true
-						v.CanCollide = false
-					end
-				end
-				for i, v in pairs(PhaseModifiedParts) do
-					if not table.find(parts, i) then
-						PhaseModifiedParts[i] = nil
-						i.CanCollide = true
-					end
-				end
-			end)
-		else
-			RunLoops:UnbindFromStepped("NoclipAround")
-			for i, v in pairs(PhaseModifiedParts) do
-				if i then
-					i.CanCollide = true
-				end
-			end
-			table.clear(PhaseModifiedParts)
-		end
-	end,
-})
-
-local NoclipKeybind = NoclipToggle:Keybind({ Name = "Noclip Keybind", Flag = "Main/Noclip/Keybind", Default = "Z" })
-local LightAttack = MainSection2:Toggle({
-	Name = "Auto Light Attack",
-	Callback = function(state)
-		if state then
-			RunLoops:BindToStepped("LightAttack", function()
-				local args = {
-					[1] = "LightAttack",
-				}
-
-				game:GetService("ReplicatedStorage")
-					:WaitForChild("Remotes")
-					:WaitForChild("ServerCombatHandler")
-					:FireServer(unpack(args))
-				task.wait()
-			end)
-		else
-			RunLoops:UnbindFromStepped("LightAttack")
-		end
-	end,
-})
-
-local CritAttack = MainSection2:Toggle({
-	Name = "Auto Crit Attack",
-	Callback = function(state)
-		if state then
-			RunLoops:BindToStepped("CritAttack", function()
-				local args = {
-					[1] = "CriticalAttack",
-				}
-
-				game:GetService("ReplicatedStorage")
-					:WaitForChild("Remotes")
-					:WaitForChild("ServerCombatHandler")
-					:FireServer(unpack(args))
-				task.wait()
-			end)
-		else
-			RunLoops:UnbindFromStepped("CritAttack")
-		end
-	end,
-})
-
-local AutoSprintToggle = MainSection2:Toggle({
-	Name = "Auto Sprint",
-	Callback = function(state)
-		if state then
-			RunLoops:BindToStepped("AutoSprintToggle", function()
-				local player = game:GetService("Players").LocalPlayer
-				local character = player.Character
-				local humanoid = character and character:FindFirstChild("Humanoid")
-
-				if humanoid and humanoid.MoveDirection.Magnitude > 1 then
-					local args = {
-						[1] = "Pressed",
-					}
-
-					player.Character.CharacterHandler.Remotes.Sprint:FireServer(unpack(args))
-				end
-
-				task.wait()
-			end)
-		else
-			RunLoops:UnbindFromStepped("AutoSprintToggle")
-			local args = {
-				[1] = "Released",
-			}
-
-			game.Players.LocalPlayer.Character.CharacterHandler.Remotes.Sprint:FireServer(unpack(args))
-		end
-	end,
-})
-
-local FarmSection = FarmTab:Section({ Name = "FarmSection", Side = "left" })
-local FarmPlayerSection = FarmTab:Section({ Name = "Player Farm", Side = "Right" })
-
-FarmSection:Divider()
-
-local MobFarmToggle = FarmSection:Toggle({
-	Name = "MobFarm",
-	Callback = function(State)
-		-- Your code here
-	end,
-})
-
-local MobSelectorDropdown = FarmSection:Dropdown({
-	Name = "Mob Selector",
-	Flag = "Farm/MobSelector",
-	List = {
-		{
-			Name = "Mob 1",
-			Mode = "Button",
-			Callback = function()
-				-- Code to select mob 1
-			end,
+getgenv().ESP = {
+	Main = {
+		Enabled = true,
+		Name = {
+			Enabled = true,
+			Color = Color3.fromRGB(255, 255, 255),
 		},
-		{
-			Name = "Mob 2",
-			Mode = "Button",
-			Callback = function()
-				-- Code to select mob 2
-			end,
+		Box = {
+			Enabled = true,
+			BoxColor = Color3.fromRGB(75, 175, 175),
+			BoxFillColor = Color3.fromRGB(100, 75, 175),
 		},
-		-- Add more mobs as needed
+		HealthBar = {
+			Enabled = true,
+			Number = true,
+			HighHealthColor = Color3.fromRGB(0, 255, 0),
+			LowHealthColor = Color3.fromRGB(255, 0, 0),
+		},
+		Tool = {
+			Enabled = true,
+			Color = Color3.fromRGB(255, 255, 255),
+		},
+		Distance = {
+			Enabled = true,
+			Color = Color3.fromRGB(255, 255, 255),
+		},
+		Chams = false,
+		AutomaticColor = false,
+		Type = "AlwaysOnTop", --// "AlwaysOnTop", "Occluded"
 	},
-})
+	Checks = {
+		WallCheck = true,
+		VisibleCheck = true,
+		ForceField = true,
+		AliveCheck = true,
+	},
+	Extra = {
+		UseDisplayName = true,
+		EspFadeOut = 400,
+		PriorityOnly = true,
+	},
+}
+-- // Tables
+local Atlanta = {
+	connections = {},
+	Safe = false,
+	Locals = {
+		PartSizes = {
+			["Head"] = Vector3.new(2, 1, 1),
+			["Torso"] = Vector3.new(2, 2, 1),
+			["Left Arm"] = Vector3.new(1, 2, 1),
+			["Right Arm"] = Vector3.new(1, 2, 1),
+			["Left Leg"] = Vector3.new(1, 2, 1),
+			["Right Leg"] = Vector3.new(1, 2, 1),
+		},
+	},
+}
+local Visuals = {
+	Bases = {},
+	Base = {},
+}
+local Color = {}
+local Utility = {}
+local Math = {
+	Conversions = {},
+}
+local Priorities = {
+	2794160137,
+}
+-- // Flags
+Flags = getgenv().ESP
+--
+local ReplicatedStorage, RunService, Workspace, Players =
+	game:GetService("ReplicatedStorage"),
+	game:GetService("RunService"),
+	game:GetService("Workspace"),
+	game:GetService("Players")
+local Client = Players.LocalPlayer
+local SetMetatable, GetUpvalue = debug.setmetatable, debug.getupvalue
+local RandomSeed, Random, Frexp, Floor, Atan2, Log10, Noise, Round, Ldexp, Clamp, Sinh, Sign, Asin, Acos, Fmod, Huge, Tanh, Sqrt, Atan, Modf, Ceil, Cosh, Deg, Min, Log, Cos, Exp, Max, Rad, Abs, Pow, Sin, Tan, Pi =
+	math.randomseed,
+	math.random,
+	math.frexp,
+	math.floor,
+	math.atan2,
+	math.log10,
+	math.noise,
+	math.round,
+	math.ldexp,
+	math.clamp,
+	math.sinh,
+	math.sign,
+	math.asin,
+	math.acos,
+	math.fmod,
+	math.huge,
+	math.tanh,
+	math.sqrt,
+	math.atan,
+	math.modf,
+	math.ceil,
+	math.cosh,
+	math.deg,
+	math.min,
+	math.log,
+	math.cos,
+	math.exp,
+	math.max,
+	math.rad,
+	math.abs,
+	math.pow,
+	math.sin,
+	math.tan,
+	math.pi
+local Remove, Create, Find = table.remove, table.create, table.find
+local PackSize, Reverse, SUnpack, Gmatch, Format, Lower, Split, Match, Upper, Byte, Char, Pack, Gsub, SFind, Rep, Sub, Len =
+	string.packsize,
+	string.reverse,
+	string.unpack,
+	string.gmatch,
+	string.format,
+	string.lower,
+	string.split,
+	string.match,
+	string.upper,
+	string.byte,
+	string.char,
+	string.pack,
+	string.gsub,
+	string.find,
+	string.rep,
+	string.sub,
+	string.len
+local Create, Resume = coroutine.create, coroutine.resume
+local Wait = task.wait
+function DestroyRenderObject(Obj)
+	Obj:Remove()
+end
+function SetRenderProperty(Obj, Mod, Value)
+	Obj[Mod] = Value
+end
 
-local players = {}
-
--- Get player names and data from workspace.Entities
-for _, obj in ipairs(workspace.Entities:GetChildren()) do
-	if game.Players:FindFirstChild(obj.Name) then
-		players[#players + 1] = {
-			Name = obj.Name,
-			Mode = "Toggle",
-			Value = false,
-			Callback = function(Selected)
-				print(Selected)
+--
+do -- // Utility
+	function Utility:Connection(connectionType, connectionCallback)
+		local connection = connectionType:Connect(connectionCallback)
+		Atlanta.connections[#Atlanta.connections + 1] = connection
+		--
+		return connection
+	end
+	--
+	function Utility:ClampString(String, Length, Font)
+		local Font = (Font or 2)
+		local Split = String:split("\n")
+		--
+		local Clamped = ""
+		--
+		for Index, Value2 in pairs(Split) do
+			if (Index * 13) <= Length then
+				Clamped = Clamped .. Value2 .. (Index == #Split and "" or "\n")
+			end
+		end
+		--
+		return (Clamped ~= String and (Clamped == "" and "" or Clamped:sub(0, #Clamped - 1) .. " ...") or Clamped)
+	end
+	--
+	function Utility:ThreadFunction(Func, Name, ...)
+		local Func = Name
+				and function()
+					local Passed, Statement = pcall(Func)
+					--
+					if not Passed and not Atlanta.Safe then
+						warn("Atlanta:\n", "              " .. Name .. ":", Statement)
+					end
+				end
+			or Func
+		local Thread = Create(Func)
+		--
+		Resume(Thread, ...)
+		return Thread
+	end
+end
+--
+do -- Color
+	function Color:Lerp(Value, MinColor, MaxColor)
+		if Value <= 0 then
+			return MaxColor
+		end
+		if Value >= 100 then
+			return MinColor
+		end
+		--
+		return Color3.new(
+			MaxColor.R + (MinColor.R - MaxColor.R) * Value,
+			MaxColor.G + (MinColor.G - MaxColor.G) * Value,
+			MaxColor.B + (MinColor.B - MaxColor.B) * Value
+		)
+	end
+end
+--
+do -- Math
+	do -- Conversions
+		Math.Conversions["Studs"] = {
+			Conversion = function(Studs)
+				return Studs
+			end,
+			Measurement = "st",
+			Round = function(Number)
+				return Round(Number)
+			end,
+		}
+		--
+		Math.Conversions["Meters"] = {
+			Conversion = function(Studs)
+				return Studs * 0.28
+			end,
+			Measurement = "m",
+			Round = function(Number)
+				return Round(Number * 10) / 10
+			end,
+		}
+		--
+		Math.Conversions["Centimeters"] = {
+			Conversion = function(Studs)
+				return Studs * 28
+			end,
+			Measurement = "cm",
+			Round = function(Number)
+				return Round(Number)
+			end,
+		}
+		--
+		Math.Conversions["Kilometers"] = {
+			Conversion = function(Studs)
+				return Studs * 0.00028
+			end,
+			Measurement = "km",
+			Round = function(Number)
+				return Round(Number * 1000) / 1000
+			end,
+		}
+		--
+		Math.Conversions["Millimeters"] = {
+			Conversion = function(Studs)
+				return Studs * 280
+			end,
+			Measurement = "mm",
+			Round = function(Number)
+				return Round(Number)
+			end,
+		}
+		--
+		Math.Conversions["Micrometers"] = {
+			Conversion = function(Studs)
+				return Studs * 280000
+			end,
+			Measurement = "μm",
+			Round = function(Number)
+				return Round(Number)
+			end,
+		}
+		--
+		Math.Conversions["Inches"] = {
+			Conversion = function(Studs)
+				return Studs * 11.0236224
+			end,
+			Measurement = [['']],
+			Round = function(Number)
+				return Round(Number)
+			end,
+		}
+		--
+		Math.Conversions["Miles"] = {
+			Conversion = function(Studs)
+				return Studs * 0.000173983936
+			end,
+			Measurement = "mi",
+			Round = function(Number)
+				return Round(Number * 10000) / 10000
+			end,
+		}
+		--
+		Math.Conversions["Nautical Miles"] = {
+			Conversion = function(Studs)
+				return Studs * 0399568
+			end,
+			Measurement = "nmi",
+			Round = function(Number)
+				return Round(Number * 10000) / 10000
+			end,
+		}
+		--
+		Math.Conversions["Yards"] = {
+			Conversion = function(Studs)
+				return Studs * 0.30621164
+			end,
+			Measurement = "yd",
+			Round = function(Number)
+				return Round(Number * 10) / 10
+			end,
+		}
+		--
+		Math.Conversions["Feet"] = {
+			Conversion = function(Studs)
+				return Studs * 0.9186352
+			end,
+			Measurement = "ft",
+			Round = function(Number)
+				return Round(Number)
 			end,
 		}
 	end
+	--
+	function Math:RotatePoint(Point, Radians)
+		local Unit = Point.Unit
+		--
+		local Sine = Sin(Radians)
+		local Cosine = Cos(Radians)
+		--
+		return Vector2.new((Cosine * Unit.X) - (Sine * Unit.Y), (Sine * Unit.X) + (Cosine * Unit.Y)).Unit
+			* Point.Magnitude
+	end
+	--
+	function Math:RoundVector(Vector)
+		return Vector2.new(Round(Vector.X), Round(Vector.Y))
+	end
+	--
+	function Math:Shift(Number)
+		return Acos(Cos(Number * Pi)) / Pi
+	end
+	--
+	function Math:Conversion(Studs, Conversion)
+		local Conversion = Math.Conversions[Conversion]
+		--
+		local Converted = Conversion.Conversion(Studs)
+		local Measurement = Conversion.Measurement
+		local Rounded = Conversion.Round(Converted)
+		--
+		return Converted, Measurement, Rounded
+	end
+	--
+	function Math:Random(Number)
+		return Random(-Number, Number)
+	end
+	--
+	function Math:RandomVec3(X, Y, Z)
+		return Vector3.new(Math:Random(X), Math:Random(Y), Math:Random(Z))
+	end
 end
-
-local PlayerSelectorDropdown = FarmPlayerSection:Dropdown({
-	Name = "Player Selector",
-	Flag = "PlayerSelector",
-	Side = "Left",
-	List = players,
-})
-
--- Clear the dropdown and add the players as options
-PlayerSelectorDropdown:Clear()
-for _, player in ipairs(players) do
-	PlayerSelectorDropdown:AddOption(player)
-end
-
-local FollowPlayerToggle = FarmPlayerSection:Toggle({
-	Name = "Follow Player",
-	Callback = function(State)
-		if State then
-			local selectedPlayer = selectedplayer
-			if selectedPlayer then
-				local humanoid = game.Players.LocalPlayer.Character
-					and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-				local bodyVelocity = Instance.new("BodyVelocity")
-				bodyVelocity.Velocity = (selectedPlayer.Character.PrimaryPart.Position - humanoid.RootPart.Position).Unit
-					* 150
-				bodyVelocity.Parent = humanoid.RootPart
-				humanoid.HipHeight = -3 -- Make the player go underground
-				while (humanoid.RootPart.Position - selectedPlayer.Character.PrimaryPart.Position).Magnitude > 100 do
-					wait()
-				end
-				humanoid.RootPart.CFrame = selectedPlayer.Character.PrimaryPart.CFrame -- Teleport to the player
-				bodyVelocity:Destroy()
-			end
-		else
-			local humanoid = game.Players.LocalPlayer.Character
-				and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-			if humanoid then
-				humanoid.HipHeight = 0 -- Make the player come back to the ground
+--
+do --// Functions
+	function Atlanta:PlayerValid(Player, Function)
+		if Player:IsA("Player") then
+			if Function then
+				return Function(Player)
+			else
+				return true
 			end
 		end
-	end,
-})
-
-FarmSection:Slider({
-	Name = "Farm Position",
-	Flag = "Farm/Position",
-	Min = 0,
-	Max = 100,
-	Value = 50,
-	Callback = function(Value)
-		-- Your code here
-	end,
-})
-
-FarmSection:Slider({
-	Name = "Tween Speed",
-	Flag = "Farm/TweenSpeed",
-	Min = 0,
-	Max = 100,
-	Value = 50,
-	Callback = function(Value)
-		-- Your code here
-	end,
-})
-
-local AutoEquipToggle = FarmSection:Toggle({
-	Name = "Autoequip",
-	Callback = function(State)
-		-- Your code here
-	end,
-})
-
-local AutoQuestToggle = FarmSection:Toggle({
-	Name = "Auto Quest",
-	Callback = function(State)
-		-- Your code here
-	end,
-})
-
-FarmSection:Slider({
-	Name = "Another Farm Position",
-	Flag = "Farm/AnotherPosition",
-	Min = 0,
-	Max = 100,
-	Value = 50,
-	Callback = function(Value)
-		-- Your code here
-	end,
-})
-
-local AdjustFarmToggle = FarmSection:Toggle({
-	Name = "Adjust Farm",
-	Callback = function(State)
-		-- Your code here
-	end,
-})
-
-FarmSection:Slider({
-	Name = "Close Toggle",
-	Flag = "Farm/CloseToggle",
-	Min = 0,
-	Max = 100,
-	Value = 50,
-	Callback = function(Value)
-		-- Your code here
-	end,
-})
-
-FarmSection:Slider({
-	Name = "Farm Position",
-	Flag = "Farm/Position",
-	Min = 0,
-	Max = 100,
-	Value = 50,
-	Callback = function(Value)
-		-- Your code here
-	end,
-})
-
-FarmSection:Slider({
-	Name = "Range",
-	Flag = "Farm/Range",
-	Min = 0,
-	Max = 100,
-	Value = 50,
-	Callback = function(Value)
-		-- Your code here
-	end,
-})
-
-local StatsSection = StatsTab:Section({ Name = "StatsSection", Side = "left" })
-StatsSection:Divider()
-
-local AutoStatsToggle = StatsSection:Toggle({ Name = "Auto Hakuda" })
-local StatsToggle1 = StatsSection:Toggle({ Name = "Auto Kendo" })
-local StatsToggle2 = StatsSection:Toggle({ Name = "Auto kido" })
-local VisualSection = VisualTab:Section({ Name = "VisualSection", Side = "left" })
--- Load custom fonts
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
--- Load custom fonts
--- Load custom fonts
-local customFont = Drawing.new("Font", "abeezee")
-customFont.Data = game:HttpGet("http://themes.googleusercontent.com/static/fonts/abeezee/v1/JYPhMn-3Xw-JGuyB-fEdNA.ttf")
-
-local customFont2 = Drawing.new("Font", "abel")
-customFont2.Data = game:HttpGet("http://themes.googleusercontent.com/static/fonts/abel/v3/N59kklKPso9WzbZH9jwJSg.ttf")
--- Initialize ESP visuals table
-getgenv().esp_visuals = {}
-
--- Function to create ESP for a player
-local function createESP(player)
-	local esp_text = Drawing.new("Text")
-	esp_text.Text = player.Name
-	esp_text.Font = customFont
-	esp_text.Size = 18
-	esp_text.Color = Color3.new(1, 1, 1) -- White text
-	esp_text.Outline = true
-	esp_text.OutlineColor = Color3.new(0, 0, 0) -- Black outline
-	esp_text.Visible = true
-
-	local esp_distance = Drawing.new("Text")
-	esp_distance.Font = customFont2
-	esp_distance.Size = 14
-	esp_distance.Color = Color3.new(1, 0, 0) -- Red text
-	esp_distance.Outline = true
-	esp_distance.OutlineColor = Color3.new(0, 0, 0) -- Black outline
-	esp_distance.Visible = true
-
-	-- Update the position of the text visuals every 0.1 seconds
-	local connection
-	connection = RunService.Heartbeat:Connect(function()
-		if player.Character and player.Character:FindFirstChild("Head") then
-			local pos =
-				workspace.CurrentCamera:WorldToViewportPoint(player.Character.Head.Position + Vector3.new(0, 3, 0)) -- Position above the head
-			esp_text.Position = Vector2.new(pos.X, pos.Y)
-			esp_distance.Position = Vector2.new(pos.X, pos.Y + 20) -- Position below the name
-			esp_distance.Text = tostring(
-				math.floor((player.Character.Head.Position - Players.LocalPlayer.Character.Head.Position).Magnitude)
-			) .. " studs"
-		else
-			esp_text.Visible = false
-			esp_distance.Visible = false
+	end
+	--
+	function Atlanta:GetCharacter(Player)
+		return Player.Character
+	end
+	--
+	function Atlanta:GetHumanoid(Player, Character)
+		return Character:FindFirstChildOfClass("Humanoid")
+	end
+	--
+	function Atlanta:GetHealth(Player, Character, Humanoid)
+		if Humanoid then
+			return Clamp(Humanoid.Health, 0, Humanoid.MaxHealth), Humanoid.MaxHealth
+		end
+	end
+	--
+	function Atlanta:GetRootPart(Player, Character, Humanoid)
+		return Humanoid.RootPart
+	end
+	--
+	function Atlanta:GetIgnore(Unpacked)
+		return
+	end
+	--
+	function Atlanta:GetBodyParts(Character, RootPart, Indexes, Hitboxes)
+		local Parts = {}
+		local Hitboxes = Hitboxes or { "Head", "Torso", "Arms", "Legs" }
+		--
+		for Index, Part in pairs(Character:GetChildren()) do
+			if Part:IsA("BasePart") and Part ~= RootPart then
+				if Find(Hitboxes, "Head") and Part.Name:lower():find("head") then
+					Parts[Indexes and Part.Name or #Parts + 1] = Part
+				elseif Find(Hitboxes, "Torso") and Part.Name:lower():find("torso") then
+					Parts[Indexes and Part.Name or #Parts + 1] = Part
+				elseif Find(Hitboxes, "Arms") and Part.Name:lower():find("arm") then
+					Parts[Indexes and Part.Name or #Parts + 1] = Part
+				elseif Find(Hitboxes, "Legs") and Part.Name:lower():find("leg") then
+					Parts[Indexes and Part.Name or #Parts + 1] = Part
+				elseif
+					(Find(Hitboxes, "Arms") and Part.Name:lower():find("hand"))
+					or (Find(Hitboxes, "Legs ") and Part.Name:lower():find("foot"))
+				then
+					Parts[Indexes and Part.Name or #Parts + 1] = Part
+				end
+			end
+		end
+		--
+		return Parts
+	end
+	--
+	function Atlanta:ClientAlive(Player, Character, Humanoid)
+		local Health, MaxHealth = Atlanta:GetHealth(Player, Character, Humanoid)
+		--
+		return (Health > 0)
+	end
+	--
+	function Atlanta:ValidateClient(Player)
+		local Object = Atlanta:GetCharacter(Player)
+		local Humanoid = (Object and Atlanta:GetHumanoid(Player, Object))
+		local RootPart = (Humanoid and Atlanta:GetRootPart(Player, Object, Humanoid))
+		--
+		return Object, Humanoid, RootPart
+	end
+	--
+	function Atlanta:GetBoundingBox(BodyParts, RootPart)
+		local Size = Vector3.new(0, 0, 0)
+		--
+		for Index, Value in pairs({ "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }) do
+			local Part = BodyParts[Value]
+			local PartSize = (Part and Part.Size or Atlanta.Locals.PartSizes[Value])
+			--
+			if Value == "Head" then
+				Size = (Size + Vector3.new(0, PartSize.Y, 0))
+			elseif Value == "Torso" then
+				Size = (Size + Vector3.new(PartSize.X, PartSize.Y, PartSize.Z))
+			elseif Value == "Left Arm" then
+				Size = (Size + Vector3.new(PartSize.X, 0, 0))
+			elseif Value == "Right Arm" then
+				Size = (Size + Vector3.new(PartSize.X, 0, 0))
+			elseif Value == "Left Leg" then
+				Size = (Size + Vector3.new(0, PartSize.Y, 0))
+			elseif Value == "Right Leg" then
+				Size = (Size + Vector3.new(0, PartSize.Y, 0))
+			end
+		end
+		--
+		return (RootPart.CFrame + Vector3.new(0, -0.125, 0)), Size
+	end
+	--
+	function Atlanta:RayCast(Part, Origin, Ignore, Distance)
+		local Ignore = Ignore or {}
+		local Distance = Distance or 2000
+		--
+		local Cast = Ray.new(Origin, (Part.Position - Origin).Unit * Distance)
+		local Hit = Workspace:FindPartOnRayWithIgnoreList(Cast, Ignore)
+		--
+		return (Hit and Hit:IsDescendantOf(Part.Parent)) == true, Hit
+	end
+	--
+	function Atlanta:GetPlayers()
+		return Players:GetPlayers()
+	end
+	--
+	function Atlanta:PlayerAdded(Player)
+		Visuals:Create({ Player = Player })
+	end
+	--
+	function Atlanta:GetUserID(Player)
+		return Player.UserId
+	end
+	--
+	function Atlanta:GetPlayerParent(Player)
+		return Player.Parent
+	end
+end
+--
+do -- // Visuals
+	function Visuals:Create(Properties)
+		if Properties then
+			if Properties.Player then
+				local Self = setmetatable({
+					Player = Properties.Player,
+					Highlight = Instance.new("Highlight"),
+					Info = {
+						Tick = tick(),
+					},
+					Renders = {
+						Flags = Drawing.new("Text"),
+						Weapon = Drawing.new("Text"),
+						Distance = Drawing.new("Text"),
+						HealthBarOutline = Drawing.new("Square"),
+						HealthBarInline = Drawing.new("Square"),
+						HealthBarValue = Drawing.new("Text"),
+						BoxFill = Drawing.new("Square"),
+						BoxOutline = Drawing.new("Square"),
+						BoxInline = Drawing.new("Square"),
+						Name = Drawing.new("Text"),
+						Arrow = Drawing.new("Triangle"),
+						ArrowOutline = Drawing.new("Triangle"),
+					},
+				}, {
+					__index = Visuals.Base,
+				})
+				--
+				Self.Highlight.Parent = Storage
+				--
+				do -- Renders.Name
+					SetRenderProperty(Self.Renders.Name, "Text", Self.Player.Name)
+					SetRenderProperty(Self.Renders.Name, "Size", 13)
+					SetRenderProperty(Self.Renders.Name, "Center", true)
+					SetRenderProperty(Self.Renders.Name, "Outline", true)
+					SetRenderProperty(Self.Renders.Name, "Font", 2)
+					SetRenderProperty(Self.Renders.Name, "Visible", false)
+				end
+				--
+				do -- Renders.Box
+					-- Inline
+					SetRenderProperty(Self.Renders.BoxInline, "Thickness", 1.25)
+					SetRenderProperty(Self.Renders.BoxInline, "Filled", false)
+					SetRenderProperty(Self.Renders.BoxInline, "Visible", false)
+					-- Outline
+					SetRenderProperty(Self.Renders.BoxOutline, "Thickness", 2.5)
+					SetRenderProperty(Self.Renders.BoxOutline, "Filled", false)
+					SetRenderProperty(Self.Renders.BoxOutline, "Visible", false)
+					-- Fill
+					SetRenderProperty(Self.Renders.BoxFill, "Filled", false)
+					SetRenderProperty(Self.Renders.BoxFill, "Visible", false)
+				end
+				--
+				do -- Renders.HealthBar
+					-- Inline
+					SetRenderProperty(Self.Renders.HealthBarInline, "Filled", true)
+					SetRenderProperty(Self.Renders.HealthBarInline, "Visible", false)
+					-- Outline
+					SetRenderProperty(Self.Renders.HealthBarOutline, "Filled", true)
+					SetRenderProperty(Self.Renders.HealthBarOutline, "Visible", false)
+					-- Value
+					SetRenderProperty(Self.Renders.HealthBarValue, "Size", 13)
+					SetRenderProperty(Self.Renders.HealthBarValue, "Center", false)
+					SetRenderProperty(Self.Renders.HealthBarValue, "Outline", true)
+					SetRenderProperty(Self.Renders.HealthBarValue, "Font", 2)
+					SetRenderProperty(Self.Renders.HealthBarValue, "Visible", false)
+				end
+				--
+				do -- Renders.Flags
+					SetRenderProperty(Self.Renders.Flags, "Size", 13)
+					SetRenderProperty(Self.Renders.Flags, "Center", false)
+					SetRenderProperty(Self.Renders.Flags, "Outline", true)
+					SetRenderProperty(Self.Renders.Flags, "Font", 2)
+					SetRenderProperty(Self.Renders.Flags, "Visible", false)
+				end
+				--
+				do -- Renders.Distance
+					SetRenderProperty(Self.Renders.Distance, "Size", 13)
+					SetRenderProperty(Self.Renders.Distance, "Center", true)
+					SetRenderProperty(Self.Renders.Distance, "Outline", true)
+					SetRenderProperty(Self.Renders.Distance, "Font", 2)
+					SetRenderProperty(Self.Renders.Distance, "Visible", false)
+				end
+				--
+				do -- Renders.Weapon
+					SetRenderProperty(Self.Renders.Weapon, "Size", 13)
+					SetRenderProperty(Self.Renders.Weapon, "Center", true)
+					SetRenderProperty(Self.Renders.Weapon, "Outline", true)
+					SetRenderProperty(Self.Renders.Weapon, "Font", 2)
+					SetRenderProperty(Self.Renders.Weapon, "Visible", false)
+				end
+				--
+				do -- Renders.Arrow
+					-- Inline
+					SetRenderProperty(Self.Renders.Arrow, "Filled", true)
+					SetRenderProperty(Self.Renders.Arrow, "Visible", false)
+					-- Outline
+					SetRenderProperty(Self.Renders.ArrowOutline, "Filled", false)
+					SetRenderProperty(Self.Renders.ArrowOutline, "Visible", false)
+					SetRenderProperty(Self.Renders.ArrowOutline, "Thickness", 1.5)
+				end
+				--
+				Visuals.Bases[Properties.Player] = Self
+				--
+				return Self
+			end
+		end
+	end
+	--
+	function Visuals:Unload()
+		for Index, Value in pairs(Visuals.Bases) do
+			Value:Remove()
+		end
+	end
+	--
+	function Visuals.Base:Remove()
+		local Self = self
+		--
+		if Self then
+			setmetatable(Self, {})
+			--
+			Visuals.Bases[Self.Player] = nil
+			--
+			Self.Object = nil
+			--
+			for Index, Value in pairs(Self.Renders) do
+				DestroyRenderObject(Value)
+			end
+			--
+			Self.Highlight:Remove()
+			--
+			Self.Renders = nil
+			Self.Highlight = nil
+			Self = nil
+		end
+	end
+	--
+	function Visuals.Base:Opacity(State, Table)
+		local Self = self
+		--
+		if Self then
+			local Renders = rawget(Self, "Renders")
+			--
+			for Index, Value in pairs(typeof(Table) == "table" and Table or Renders) do
+				SetRenderProperty(typeof(Table) == "table" and Renders[Value] or Value, "Visible", State)
+			end
+			--
+			Self.Highlight.Adornee = nil
+			Self.Highlight.Enabled = false
+			--
+			if not State then
+				Self.Info.RootPartCFrame = nil
+				Self.Info.Health = nil
+				Self.Info.MaxHealth = nil
+				Self.Info.BoundingBox = nil
+			end
+		end
+	end
+	--
+	function Visuals.Base:Update()
+		local Self = self
+		--
+		if Self then
+			local Renders = rawget(Self, "Renders")
+			local Player = rawget(Self, "Player")
+			local Info = rawget(Self, "Info")
+			local Parent = Atlanta:GetPlayerParent(Player)
+			--
+			if
+				(Player and Player ~= Client and Parent and Parent ~= nil)
+				or (Info.RootPartCFrame and Info.Health and Info.MaxHealth)
+			then
+				if ESP.Main.Enabled then
+					local Object, Humanoid, RootPart = Atlanta:ValidateClient(Player)
+					local BodyParts = (RootPart and Atlanta:GetBodyParts(Object, RootPart, true))
+					local TransparencyMultplier = 1
+					--
+					if Object and Object.Parent and (Humanoid and RootPart and BodyParts) then
+						local Health, MaxHealth = Atlanta:GetHealth(Player, Object, Humanoid)
+						--
+						if
+							(ESP.Checks.AliveCheck and not Atlanta:ClientAlive(Player, Character, Humanoid))
+							or (ESP.Checks.ForceField and Object:FindFirstChildOfClass("ForceField"))
+						then
+							Info.Pass = false
+						else
+							Info.Pass = true
+							Info.RootPartCFrame = RootPart.CFrame
+							Info.Health = Health
+							Info.MaxHealth = MaxHealth
+						end
+					else
+						Info.Pass = false
+					end
+					--
+					if Info.Pass then
+						Info.Tick = tick()
+					else
+						local FadeOut = ESP.Extra.EspFadeOut
+						local FadeTime = FadeOut / 1000
+						local Value = Info.Tick - tick()
+						--
+						if not FadeOut == 0 and Value <= FadeTime then
+							TransparencyMultplier = Clamp((Value + FadeTime) * 1 / FadeTime, 0, 1)
+						else
+							Info.RootPartCFrame = nil
+							Info.Health = nil
+							Info.MaxHealth = nil
+							Info.BoundingBox = nil
+						end
+					end
+					--
+					if Info.RootPartCFrame and Info.Health and Info.MaxHealth then
+						local Override = nil
+						local Orhue, Orsaturation, Orvalue = (Override or Color3.new()):ToHSV()
+						--
+						local Conversion = "Studs"
+						--
+						local Magnitude = (Workspace.CurrentCamera.CFrame.Position - Info.RootPartCFrame.Position).Magnitude
+						local Distance, Measurement, Rounded = Math:Conversion(Magnitude, Conversion)
+						local Position, OnScreen =
+							Workspace.CurrentCamera:WorldToViewportPoint(Info.RootPartCFrame.Position)
+						--
+						local BoxSize
+						local BoxPosition
+						--
+						if OnScreen then
+							getgenv().MaxDistance = 1000
+							--
+							if Magnitude <= getgenv().MaxDistance then
+								local BoundingBox = (
+									Info.Pass and { Atlanta:GetBoundingBox(BodyParts, RootPart) } or Info.BoundingBox
+								)
+								local Width = (Workspace.CurrentCamera.CFrame - Workspace.CurrentCamera.CFrame.Position)
+									* Vector3.new((Clamp(BoundingBox[2].X, 1, 10) + 0.5) / 2, 0, 0)
+								local Height = (
+									Workspace.CurrentCamera.CFrame - Workspace.CurrentCamera.CFrame.Position
+								) * Vector3.new(0, (Clamp(BoundingBox[2].Y, 1, 10) + 0.5) / 2, 0)
+								--
+								if Info.Pass then
+									Info.BoundingBox = BoundingBox
+								end
+								--
+								local Middle = Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position)
+								Width = Abs(
+									Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position + Width).X
+										- Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position - Width).X
+								)
+								Height = Abs(
+									Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position + Height).Y
+										- Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position - Height).Y
+								)
+								--
+								BoxSize = Math:RoundVector(Vector2.new(Width, Height))
+								BoxPosition = Math:RoundVector(Vector2.new(Middle.X, Middle.Y) - (BoxSize / 2))
+								--
+								do -- Box
+									if ESP.Main.Box.Enabled then
+										local BoxColor1, BoxTransparency1 =
+											Override or ESP.Main.Box.BoxColor, (1 - 0 * TransparencyMultplier)
+										local BoxColor2, BoxTransparency2 =
+											Override or ESP.Main.Box.BoxFillColor, (1 - 0.5 * TransparencyMultplier)
+										-- Inline
+										SetRenderProperty(Renders.BoxInline, "Size", BoxSize)
+										SetRenderProperty(Renders.BoxInline, "Position", BoxPosition)
+										SetRenderProperty(Renders.BoxInline, "Visible", true)
+										SetRenderProperty(Renders.BoxInline, "Color", BoxColor1)
+										SetRenderProperty(Renders.BoxInline, "Transparency", BoxTransparency1)
+										-- Outline
+										SetRenderProperty(Renders.BoxOutline, "Size", BoxSize)
+										SetRenderProperty(Renders.BoxOutline, "Position", BoxPosition)
+										SetRenderProperty(Renders.BoxOutline, "Visible", true)
+										SetRenderProperty(Renders.BoxOutline, "Transparency", BoxTransparency1)
+										-- Fill
+										SetRenderProperty(Renders.BoxFill, "Size", BoxSize)
+										SetRenderProperty(Renders.BoxFill, "Position", BoxPosition)
+										SetRenderProperty(Renders.BoxFill, "Visible", false)
+										SetRenderProperty(Renders.BoxFill, "Color", BoxColor2)
+										SetRenderProperty(Renders.BoxFill, "Transparency", BoxTransparency2)
+									else
+										SetRenderProperty(Renders.BoxInline, "Visible", false)
+										SetRenderProperty(Renders.BoxOutline, "Visible", false)
+										SetRenderProperty(Renders.BoxFill, "Visible", false)
+									end
+								end
+							end
+						end
+						--
+						do -- Chams
+							if ESP.Main.Chams then
+								local ChamsFill, ChamsFillTransparency =
+									Override or Flags[Selection .. "ChamsFill"]:Get().Color,
+									(
+										1
+										- (
+											(1 - Flags[Selection .. "ChamsFill"]:Get().Transparency)
+											* TransparencyMultplier
+										)
+									)
+								local ChamsOutline, ChamsOutlineTransparency =
+									Flags[Selection .. "ChamsOutline"]:Get().Color,
+									(
+										1
+										- (
+											(1 - Flags[Selection .. "ChamsOutline"]:Get().Transparency)
+											* TransparencyMultplier
+										)
+									)
+								local HighlightMode = Flags[Selection .. "HighlightMode"]:Get()
+								--
+								local ChamsAuto = Atlanta.Locals.SelectedPlayersSection ~= "Local"
+									and Flags[Selection .. "ChamsAuto"]:Get()
+								local ChamsVisible, ChamsVisibleTransparency =
+									ChamsAuto and Flags[Selection .. "ChamsVisible"]:Get().Color,
+									ChamsAuto
+										and (
+											1
+											- (
+												(1 - Flags[Selection .. "ChamsVisible"]:Get().Transparency)
+												* TransparencyMultplier
+											)
+										)
+								local ChamsHidden, ChamsHiddenTransparency =
+									ChamsAuto and Flags[Selection .. "ChamsHidden"]:Get().Color,
+									ChamsAuto
+										and (
+											1
+											- (
+												(1 - Flags[Selection .. "ChamsHidden"]:Get().Transparency)
+												* TransparencyMultplier
+											)
+										)
+								--
+								local Visible = OnScreen
+									and (
+										RootPart ~= nil
+										and Atlanta:RayCast(
+											RootPart,
+											Workspace.CurrentCamera.CFrame.Position,
+											{ Atlanta:GetCharacter(Client), Atlanta:GetIgnore(true) }
+										)
+									)
+								--
+								if Info.Pass then
+									Self.Highlight.Adornee = Object
+								end
+								--
+								Self.Highlight.FillColor = ChamsAuto and (Visible and ChamsVisible or ChamsHidden)
+									or ChamsFill
+								Self.Highlight.FillTransparency = ChamsAuto
+										and (Visible and ChamsVisibleTransparency or ChamsHiddenTransparency)
+									or ChamsFillTransparency
+								Self.Highlight.OutlineColor = ChamsOutline
+								Self.Highlight.OutlineTransparency = ChamsOutlineTransparency
+								Self.Highlight.DepthMode = Enum.HighlightDepthMode[HighlightMode]
+								Self.Highlight.Enabled = true
+							else
+								Self.Highlight.Adornee = nil
+								Self.Highlight.Enabled = false
+							end
+						end
+						--
+						if BoxSize and BoxPosition then
+							do -- Name
+								local NameEnabled = ESP.Main.Name.Enabled
+								--
+								if NameEnabled then
+									local NameColor, NameTransparency =
+										Override or ESP.Main.Name.Color, ((1 - 0) * TransparencyMultplier)
+									--
+									local Text
+									--
+									if ESP.Extra.UseDisplayName then
+										Text = (
+											(
+													Player.DisplayName ~= nil
+													and Player.DisplayName ~= ""
+													and Player.DisplayName ~= " "
+												)
+												and Player.DisplayName
+											or Player.Name
+										)
+									else
+										Text = Player.Name
+									end
+									--
+									SetRenderProperty(Renders.Name, "Text", Text)
+									SetRenderProperty(
+										Renders.Name,
+										"Position",
+										BoxPosition + Vector2.new(BoxSize.X / 2, -(13 + 4))
+									)
+									SetRenderProperty(Renders.Name, "Visible", true)
+									SetRenderProperty(Renders.Name, "Color", NameColor)
+									SetRenderProperty(Renders.Name, "Transparency", NameTransparency)
+								else
+									SetRenderProperty(Renders.Name, "Visible", false)
+								end
+							end
+							--
+							do -- HeatlhBar
+								local HealthBarColor1, HealthBarTransparency =
+									ESP.Main.HealthBar.HighHealthColor, ((1 - 0) * TransparencyMultplier)
+								local HealthBarColor2 = ESP.Main.HealthBar.LowHealthColor
+								local HealthBarEnabled
+								local HealthNumEnabled
+								--
+								HealthBarEnabled = ESP.Main.HealthBar.Enabled
+								HealthNumEnabled = ESP.Main.HealthBar.Number
+								--
+								local HealthSize = (Floor(BoxSize.Y * (Info.Health / Info.MaxHealth)))
+								local Color = Color:Lerp(Info.Health / Info.MaxHealth, HealthBarColor1, HealthBarColor2)
+								local Height = ((BoxPosition.Y + BoxSize.Y) - HealthSize)
+								--
+								if HealthBarEnabled then
+									-- Inline
+									SetRenderProperty(Renders.HealthBarInline, "Color", Color)
+									SetRenderProperty(Renders.HealthBarInline, "Size", Vector2.new(2, HealthSize))
+									SetRenderProperty(
+										Renders.HealthBarInline,
+										"Position",
+										Vector2.new(BoxPosition.X - 5, Height)
+									)
+									SetRenderProperty(Renders.HealthBarInline, "Visible", true)
+									SetRenderProperty(Renders.HealthBarInline, "Transparency", HealthBarTransparency)
+									-- Outline
+									SetRenderProperty(Renders.HealthBarOutline, "Size", Vector2.new(4, BoxSize.Y + 2))
+									SetRenderProperty(
+										Renders.HealthBarOutline,
+										"Position",
+										Vector2.new(BoxPosition.X - 6, BoxPosition.Y - 1)
+									)
+									SetRenderProperty(Renders.HealthBarOutline, "Visible", true)
+									SetRenderProperty(Renders.HealthBarOutline, "Transparency", HealthBarTransparency)
+								else
+									SetRenderProperty(Renders.HealthBarInline, "Visible", false)
+									SetRenderProperty(Renders.HealthBarOutline, "Visible", false)
+								end
+								--
+								if HealthNumEnabled then
+									-- Value
+									local Text = Utility:ClampString(tostring(Round(Info.Health)), BoxSize.Y)
+									--
+									SetRenderProperty(Renders.HealthBarValue, "Text", Text)
+									SetRenderProperty(Renders.HealthBarValue, "Color", Color)
+									SetRenderProperty(
+										Renders.HealthBarValue,
+										"Position",
+										Vector2.new(
+											BoxPosition.X - (HealthBarEnabled and 8 or 4) - (#Text * 8),
+											Clamp(Height, 0, Height + HealthSize - (HealthSize > 13 and 13 or 0))
+										)
+									)
+									SetRenderProperty(Renders.HealthBarValue, "Visible", true)
+									SetRenderProperty(Renders.HealthBarValue, "Transparency", HealthBarTransparency)
+								else
+									SetRenderProperty(Renders.HealthBarValue, "Visible", false)
+								end
+							end
+							--
+							local DistanceEnabled = ESP.Main.Distance.Enabled
+							local DistanceColor2 = ESP.Main.Distance.Color
+							--
+							do -- Distance
+								if DistanceEnabled then
+									local DistanceColor, DistanceTransparency =
+										Override or DistanceColor2, ((1 - 0) * TransparencyMultplier)
+									--
+									SetRenderProperty(Renders.Distance, "Text", ("%s%s"):format(Rounded, Measurement))
+									SetRenderProperty(
+										Renders.Distance,
+										"Position",
+										BoxPosition + Vector2.new(BoxSize.X / 2, (BoxSize.Y + 4))
+									)
+									SetRenderProperty(Renders.Distance, "Visible", true)
+									SetRenderProperty(Renders.Distance, "Color", DistanceColor)
+									SetRenderProperty(Renders.Distance, "Transparency", DistanceTransparency)
+								else
+									SetRenderProperty(Renders.Distance, "Visible", false)
+								end
+							end
+							--
+							do -- Weapon
+								local WeaponEnabled = ESP.Main.Tool.Enabled
+								local ToolColor = ESP.Main.Tool.Color
+								--
+								if WeaponEnabled then
+									local WeaponColor, WeaponTransparency =
+										Override and Color3.fromHSV(Orhue, Orsaturation, Orvalue - 0.2) or ToolColor,
+										((1 - 0) * TransparencyMultplier)
+									--
+									local Tool = Object:FindFirstChildOfClass("Tool")
+									--
+									SetRenderProperty(
+										Renders.Weapon,
+										"Text",
+										("%s"):format((Tool and (Tool.Name:sub(0, 12)) or " "))
+									)
+									SetRenderProperty(
+										Renders.Weapon,
+										"Position",
+										BoxPosition
+											+ Vector2.new(
+												BoxSize.X / 2,
+												(BoxSize.Y + 4 + (DistanceEnabled and 13 or 0))
+											)
+									)
+									SetRenderProperty(Renders.Weapon, "Visible", true)
+									SetRenderProperty(Renders.Weapon, "Color", WeaponColor)
+									SetRenderProperty(Renders.Weapon, "Transparency", WeaponTransparency)
+								else
+									SetRenderProperty(Renders.Weapon, "Visible", false)
+								end
+							end
+							--
+							return
+						end
+					end
+				end
+				--
+				return Self:Opacity(false)
+			end
+			--
+			return Self:Remove()
+		end
+	end
+end
+--
+do -- // Connections
+	Utility:Connection(RunService.RenderStepped, function()
+		for Index, Value in pairs(Visuals.Bases) do
+			Utility:ThreadFunction(function()
+				Value:Update()
+			end, "3x02")
 		end
 	end)
-
-	-- Store the ESP visuals in the table
-	getgenv().esp_visuals[player] = { esp_text, esp_distance, connection }
+	--
+	Utility:Connection(Players.ChildAdded, function(Child)
+		Atlanta:PlayerValid(Child, function(Validated)
+			Atlanta:PlayerAdded(Validated)
+		end)
+	end)
 end
-
-
--- Create ESP visuals
-local EspToggle = VisualSection:Toggle({
-	Name = "ESP",
-	Callback = function(State)
-		if State then
-
-
-			ESP:Toggle(State)
-        else
-		ESP:Toggle(false)
-        end
-    end,
-    TextSize = 18,
-})
-local TeammatesToggle = VisualSection:Toggle({
-	Name = "Teammates",
-	Callback = function(State)
-		-- Your code here for enabling/disabling teammates display
-	end,
-	TextSize = 18, -- Adjust the text size as needed
-})
-
-local NamesToggle = VisualSection:Toggle({
-	Name = "Names",
-	Callback = function(State)
-		-- Your code here for enabling/disabling names display
-	end,
-	TextSize = 18, -- Adjust the text size as needed
-})
-
-local BoxesToggle = VisualSection:Toggle({
-	Name = "Boxes",
-	Callback = function(State)
-		-- Your code here for enabling/disabling boxes display
-	end,
-	TextSize = 18, -- Adjust the text size as needed
-})
-
-local colorofesp = Color3.new(15, 15, 15)
-local ColorPicker = VisualSection:Colorpicker({
-	Name = "ESP Color",
-	Flag = "Visual/ESPColor",
-	Value = Color3.new(1, 0, 0),
-	Callback = function(Color)
-		colorofesp = Color
-	end,
-	TextSize = 18, -- Adjust the text size as needed
-})
-
-local SkillSection = SkillTab:Section({ Name = "SkillSection", Side = "left" })
-SkillSection:Divider()
-
-local SkillToggle1 = SkillSection:Toggle({ Name = "Skill 1" })
-local SkillToggle2 = SkillSection:Toggle({ Name = "Skill 2" })
-local SkillToggle3 = SkillSection:Toggle({ Name = "Skill 3" })
-local SkillToggle4 = SkillSection:Toggle({ Name = "Skill 4" })
-local SkillToggle5 = SkillSection:Toggle({ Name = "Skill 5" })
-local SkillToggle6 = SkillSection:Toggle({ Name = "Skill 6" })
-local SkillToggle7 = SkillSection:Toggle({ Name = "Skill 7" })
-local SkillToggle8 = SkillSection:Toggle({ Name = "Skill 8" })
-local SkillToggle9 = SkillSection:Toggle({ Name = "Skill 9" })
-local SkillToggle0 = SkillSection:Toggle({ Name = "Skill 0" })
-
-local MiscLeftSection = MiscTab:Section({ Name = "MiscLeftSection", Side = "left" })
-MiscLeftSection:Divider()
-
-local MiscRightSection = MiscTab:Section({ Name = "MiscRightSection", Side = "right" })
-MiscRightSection:Divider()
-
-local ChatloggerToggle = MiscLeftSection:Toggle({
-	Name = "ChatLogger",
-	Callback = function(State)
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/mac2115/Cool-private/main/ESP", true))()
-	end,
-})
-
-local ServerHopToggle = MiscLeftSection:Toggle({
-	Name = "Server Hop",
-	Callback = function(State)
-		-- Your code here for server hopping
-	end,
-})
-
-local StreamerModToggle = MiscLeftSection:Toggle({
-	Name = "Streamer Mod",
-	Callback = function(State)
-		-- Your code here for enabling/disabling streamer mod
-	end,
-})
-
-local DestroyKillBrickToggle = MiscRightSection:Toggle({
-	Name = "Destroy Kill Brick",
-	Callback = function(State)
-		-- Your code here for enabling/disabling destroy kill brick
-	end,
-})
-
-local InstantResetToggle = MiscRightSection:Toggle({
-	Name = "Instant Reset",
-	Callback = function(State)
-		-- Your code here for enabling/disabling instant reset
-	end,
-})
-
-local TweenToNPCToggle = MiscRightSection:Toggle({
-	Name = "Tween to NPC",
-	Callback = function(State)
-		-- Your code here for enabling/disabling tween to NPC
-	end,
-})
-
-local NPCDropdown = MiscRightSection:Dropdown({
-	Name = "NPC Selector",
-	Flag = "Misc/NPCSelector",
-	List = {
-		{
-			Name = "NPC 1",
-			Mode = "Button",
-			Callback = function()
-				-- Code to select NPC 1
-			end,
-		},
-		{
-			Name = "NPC 2",
-			Mode = "Button",
-			Callback = function()
-				-- Code to select NPC 2
-			end,
-		},
-		-- Add more NPCs as needed
-	},
-})
-
-local StopTweenButton = MiscRightSection:Button({
-	Name = "Stop Tween",
-	Callback = function()
-		-- Your code here to stop tweening
-	end,
-})
-
-local MenuSection = OptionsTab:Section({ Name = "Menu", Side = "Left" })
-local UIToggle = MenuSection:Toggle({
-	Name = "UI Enabled",
-	Flag = "UI/Enabled",
-	IgnoreFlag = true,
-	Value = Window.Enabled,
-	Callback = function(Bool)
-		Window.Enabled = Bool
-	end,
-})
-UIToggle:Keybind({ Value = "RightShift", Flag = "UI/Keybind", DoNotClear = true })
-UIToggle:Colorpicker({
-	Flag = "UI/Color",
-	Value = { 1, 0.25, 1, 0, true },
-	Callback = function(HSVAR, Color)
-		Window.Color = Color
-	end,
-})
-
-MenuSection:Toggle({ Name = "Open On Load", Flag = "UI/OOL", Value = true })
-MenuSection:Toggle({
-	Name = "Blur Gameplay",
-	Flag = "UI/Blur",
-	Value = true,
-	Callback = function(Bool)
-		Window.Blur = Bool
-	end,
-})
-MenuSection:Toggle({
-	Name = "Watermark",
-	Flag = "UI/Watermark/Enabled",
-	Value = true,
-	Callback = function(Bool)
-		Window.Watermark.Enabled = Bool
-	end,
-}):Keybind({ Flag = "UI/Watermark/Keybind" })
-
-OptionsTab:AddConfigSection("Bracket_Example", "Left")
-
-local BackgroundSection = OptionsTab:Section({ Name = "Background", Side = "Right" })
-BackgroundSection:Colorpicker({
-	Name = "Color",
-	Flag = "Background/Color",
-	Value = { 1, 1, 0, 0, false },
-	Callback = function(HSVAR, Color)
-		Window.Background.ImageColor3 = Color
-		Window.Background.ImageTransparency = HSVAR[4]
-	end,
-})
-BackgroundSection:Textbox({
-	HideName = true,
-	Flag = "Background/CustomImage",
-	Placeholder = "rbxassetid://ImageId",
-	Callback = function(String, EnterPressed)
-		if EnterPressed then
-			Window.Background.Image = String
-		end
-	end,
-})
-BackgroundSection:Dropdown({
-	HideName = true,
-	Flag = "Background/Image",
-	List = {
-		{
-			Name = "Legacy",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://2151741365"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-		{
-			Name = "Hearts",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://6073763717"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-		{
-			Name = "Abstract",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://6073743871"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-		{
-			Name = "Hexagon",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://6073628839"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-		{
-			Name = "Circles",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://6071579801"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-		{
-			Name = "Lace With Flowers",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://6071575925"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-		{
-			Name = "Floral",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://5553946656"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-			Value = true,
-		},
-		{
-			Name = "Halloween",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://11113209821"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-		{
-			Name = "Christmas",
-			Mode = "Button",
-			Callback = function()
-				Window.Background.Image = "rbxassetid://11711560928"
-				Window.Flags["Background/CustomImage"] = ""
-			end,
-		},
-	},
-})
-BackgroundSection:Slider({
-	Name = "Tile Offset",
-	Flag = "Background/Offset",
-	Wide = true,
-	Min = 74,
-	Max = 293,
-	Value = 74,
-	Callback = function(Number)
-		Window.Background.TileSize = UDim2.fromOffset(Number, Number)
-	end,
-})
-
-Window:SetValue("Background/Offset", 74)
-Window:AutoLoadConfig("Bracket_Example")
-Window:SetValue("UI/Enabled", Window.Flags["UI/OOL"])
+--
+for Index, Player in pairs(Atlanta:GetPlayers()) do
+	Atlanta:PlayerValid(Player, function(Validated)
+		Atlanta:PlayerAdded(Validated)
+	end)
+end
