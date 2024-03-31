@@ -701,8 +701,8 @@ do -- // Visuals
 						local BoxPosition
 						--
 						if OnScreen then
-							--
-							if Magnitude <= getgenv().ESP.Main.Distance then
+							MaxDistance = 1000
+							if Magnitude <= MaxDistance then
 								local BoundingBox = (
 									Info.Pass and { Atlanta:GetBoundingBox(BodyParts, RootPart) } or Info.BoundingBox
 								)
