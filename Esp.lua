@@ -1,6 +1,7 @@
 getgenv().ESP = {
 	Main = {
 		Enabled = true,
+        Distance = 1000,
 		Name = {
 			Enabled = true,
 			Color = Color3.fromRGB(255, 255, 255),
@@ -700,9 +701,9 @@ do -- // Visuals
 						local BoxPosition
 						--
 						if OnScreen then
-							getgenv().MaxDistance = 1000
+							getgenv().ESP.Main.Distance = 1000
 							--
-							if Magnitude <= getgenv().MaxDistance then
+							if Magnitude <= getgenv().ESP.Main.Distance then
 								local BoundingBox = (
 									Info.Pass and { Atlanta:GetBoundingBox(BodyParts, RootPart) } or Info.BoundingBox
 								)
