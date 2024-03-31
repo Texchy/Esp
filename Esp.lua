@@ -701,7 +701,6 @@ do -- // Visuals
 						local BoxPosition
 						--
 						if OnScreen then
-							getgenv().ESP.Main.Distance = 1000
 							--
 							if Magnitude <= getgenv().ESP.Main.Distance then
 								local BoundingBox = (
