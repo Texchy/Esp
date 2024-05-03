@@ -1,7 +1,7 @@
 getgenv().ESP = {
 	Main = {
 		Enabled = true,
-        Distance = 10000,
+		Distance = 10000,
 		Name = {
 			Enabled = true,
 			Color = Color3.fromRGB(255, 255, 255),
@@ -706,7 +706,7 @@ do -- // Visuals
 						local BoxPosition
 						--
 						if OnScreen then
-							MaxDistance = 1000
+							MaxDistance = 100000000
 							if Magnitude <= MaxDistance then
 								local BoundingBox = (
 									Info.Pass and { Atlanta:GetBoundingBox(BodyParts, RootPart) } or Info.BoundingBox
@@ -870,14 +870,14 @@ do -- // Visuals
 									SetRenderProperty(
 										Renders.INGName,
 										"Position",
-BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
+										BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))
+									)
 									SetRenderProperty(Renders.INGName, "Visible", true)
 									SetRenderProperty(Renders.INGName, "Color", INGNameColor)
 									SetRenderProperty(Renders.INGName, "Transparency", INGNameTransparency)
 								else
 									SetRenderProperty(Renders.INGName, "Visible", false)
 								end
-							
 
 								if NameEnabled then
 									local NameColor, NameTransparency =
