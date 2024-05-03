@@ -1,7 +1,7 @@
 getgenv().ESP = {
 	Main = {
 		Enabled = true,
-        Distance = 1000,
+        Distance = 10000,
 		Name = {
 			Enabled = true,
 			Color = Color3.fromRGB(255, 255, 255),
@@ -31,7 +31,7 @@ getgenv().ESP = {
 		},
 		Chams = false,
 		AutomaticColor = false,
-		Type = "AlwaysOnTop", 
+		Type = "AlwaysOnTop", --// "AlwaysOnTop", "Occluded"
 	},
 	Checks = {
 		WallCheck = true,
@@ -45,7 +45,7 @@ getgenv().ESP = {
 		PriorityOnly = true,
 	},
 }
-
+-- // Tables
 local Atlanta = {
 	connections = {},
 	Safe = false,
@@ -72,9 +72,9 @@ local Math = {
 local Priorities = {
 	2794160137,
 }
-
+-- // Flags
 Flags = getgenv().ESP
-
+--
 local ReplicatedStorage, RunService, Workspace, Players =
 	game:GetService("ReplicatedStorage"),
 	game:GetService("RunService"),
@@ -145,48 +145,48 @@ function SetRenderProperty(Obj, Mod, Value)
 	Obj[Mod] = Value
 end
 
-
-do 
+--
+do -- // Utility
 	function Utility:Connection(connectionType, connectionCallback)
 		local connection = connectionType:Connect(connectionCallback)
 		Atlanta.connections[#Atlanta.connections + 1] = connection
-		
+		--
 		return connection
 	end
-	
+	--
 	function Utility:ClampString(String, Length, Font)
 		local Font = (Font or 2)
 		local Split = String:split("\n")
-		
+		--
 		local Clamped = ""
-		
+		--
 		for Index, Value2 in pairs(Split) do
 			if (Index * 13) <= Length then
 				Clamped = Clamped .. Value2 .. (Index == #Split and "" or "\n")
 			end
 		end
-		
+		--
 		return (Clamped ~= String and (Clamped == "" and "" or Clamped:sub(0, #Clamped - 1) .. " ...") or Clamped)
 	end
-	
+	--
 	function Utility:ThreadFunction(Func, Name, ...)
 		local Func = Name
 				and function()
 					local Passed, Statement = pcall(Func)
-					
+					--
 					if not Passed and not Atlanta.Safe then
 						warn("Atlanta:\n", "              " .. Name .. ":", Statement)
 					end
 				end
 			or Func
 		local Thread = Create(Func)
-		
+		--
 		Resume(Thread, ...)
 		return Thread
 	end
 end
-
-do 
+--
+do -- Color
 	function Color:Lerp(Value, MinColor, MaxColor)
 		if Value <= 0 then
 			return MaxColor
@@ -194,7 +194,7 @@ do
 		if Value >= 100 then
 			return MinColor
 		end
-		
+		--
 		return Color3.new(
 			MaxColor.R + (MinColor.R - MaxColor.R) * Value,
 			MaxColor.G + (MinColor.G - MaxColor.G) * Value,
@@ -202,9 +202,9 @@ do
 		)
 	end
 end
-
-do 
-	do 
+--
+do -- Math
+	do -- Conversions
 		Math.Conversions["Studs"] = {
 			Conversion = function(Studs)
 				return Studs
@@ -214,7 +214,7 @@ do
 				return Round(Number)
 			end,
 		}
-		
+		--
 		Math.Conversions["Meters"] = {
 			Conversion = function(Studs)
 				return Studs * 0.28
@@ -224,7 +224,7 @@ do
 				return Round(Number * 10) / 10
 			end,
 		}
-		
+		--
 		Math.Conversions["Centimeters"] = {
 			Conversion = function(Studs)
 				return Studs * 28
@@ -234,7 +234,7 @@ do
 				return Round(Number)
 			end,
 		}
-		
+		--
 		Math.Conversions["Kilometers"] = {
 			Conversion = function(Studs)
 				return Studs * 0.00028
@@ -244,7 +244,7 @@ do
 				return Round(Number * 1000) / 1000
 			end,
 		}
-		
+		--
 		Math.Conversions["Millimeters"] = {
 			Conversion = function(Studs)
 				return Studs * 280
@@ -254,7 +254,7 @@ do
 				return Round(Number)
 			end,
 		}
-		
+		--
 		Math.Conversions["Micrometers"] = {
 			Conversion = function(Studs)
 				return Studs * 280000
@@ -264,7 +264,7 @@ do
 				return Round(Number)
 			end,
 		}
-		
+		--
 		Math.Conversions["Inches"] = {
 			Conversion = function(Studs)
 				return Studs * 11.0236224
@@ -274,7 +274,7 @@ do
 				return Round(Number)
 			end,
 		}
-		
+		--
 		Math.Conversions["Miles"] = {
 			Conversion = function(Studs)
 				return Studs * 0.000173983936
@@ -284,7 +284,7 @@ do
 				return Round(Number * 10000) / 10000
 			end,
 		}
-		
+		--
 		Math.Conversions["Nautical Miles"] = {
 			Conversion = function(Studs)
 				return Studs * 0399568
@@ -294,7 +294,7 @@ do
 				return Round(Number * 10000) / 10000
 			end,
 		}
-		
+		--
 		Math.Conversions["Yards"] = {
 			Conversion = function(Studs)
 				return Studs * 0.30621164
@@ -304,7 +304,7 @@ do
 				return Round(Number * 10) / 10
 			end,
 		}
-		
+		--
 		Math.Conversions["Feet"] = {
 			Conversion = function(Studs)
 				return Studs * 0.9186352
@@ -315,45 +315,45 @@ do
 			end,
 		}
 	end
-	
+	--
 	function Math:RotatePoint(Point, Radians)
 		local Unit = Point.Unit
-		
+		--
 		local Sine = Sin(Radians)
 		local Cosine = Cos(Radians)
-		
+		--
 		return Vector2.new((Cosine * Unit.X) - (Sine * Unit.Y), (Sine * Unit.X) + (Cosine * Unit.Y)).Unit
 			* Point.Magnitude
 	end
-	
+	--
 	function Math:RoundVector(Vector)
 		return Vector2.new(Round(Vector.X), Round(Vector.Y))
 	end
-	
+	--
 	function Math:Shift(Number)
 		return Acos(Cos(Number * Pi)) / Pi
 	end
-	
+	--
 	function Math:Conversion(Studs, Conversion)
 		local Conversion = Math.Conversions[Conversion]
-		
+		--
 		local Converted = Conversion.Conversion(Studs)
 		local Measurement = Conversion.Measurement
 		local Rounded = Conversion.Round(Converted)
-		
+		--
 		return Converted, Measurement, Rounded
 	end
-	
+	--
 	function Math:Random(Number)
 		return Random(-Number, Number)
 	end
-	
+	--
 	function Math:RandomVec3(X, Y, Z)
 		return Vector3.new(Math:Random(X), Math:Random(Y), Math:Random(Z))
 	end
 end
-
-do 
+--
+do --// Functions
 	function Atlanta:PlayerValid(Player, Function)
 		if Player:IsA("Player") then
 			if Function then
@@ -363,33 +363,33 @@ do
 			end
 		end
 	end
-	
+	--
 	function Atlanta:GetCharacter(Player)
 		return Player.Character
 	end
-	
+	--
 	function Atlanta:GetHumanoid(Player, Character)
 		return Character:FindFirstChildOfClass("Humanoid")
 	end
-	
+	--
 	function Atlanta:GetHealth(Player, Character, Humanoid)
 		if Humanoid then
 			return Clamp(Humanoid.Health, 0, Humanoid.MaxHealth), Humanoid.MaxHealth
 		end
 	end
-	
+	--
 	function Atlanta:GetRootPart(Player, Character, Humanoid)
 		return Humanoid.RootPart
 	end
-	
+	--
 	function Atlanta:GetIgnore(Unpacked)
 		return
 	end
-	
+	--
 	function Atlanta:GetBodyParts(Character, RootPart, Indexes, Hitboxes)
 		local Parts = {}
 		local Hitboxes = Hitboxes or { "Head", "Torso", "Arms", "Legs" }
-		
+		--
 		for Index, Part in pairs(Character:GetChildren()) do
 			if Part:IsA("BasePart") and Part ~= RootPart then
 				if Find(Hitboxes, "Head") and Part.Name:lower():find("head") then
@@ -408,31 +408,31 @@ do
 				end
 			end
 		end
-		
+		--
 		return Parts
 	end
-	
+	--
 	function Atlanta:ClientAlive(Player, Character, Humanoid)
 		local Health, MaxHealth = Atlanta:GetHealth(Player, Character, Humanoid)
-		
+		--
 		return (Health > 0)
 	end
-	
+	--
 	function Atlanta:ValidateClient(Player)
 		local Object = Atlanta:GetCharacter(Player)
 		local Humanoid = (Object and Atlanta:GetHumanoid(Player, Object))
 		local RootPart = (Humanoid and Atlanta:GetRootPart(Player, Object, Humanoid))
-		
+		--
 		return Object, Humanoid, RootPart
 	end
-	
+	--
 	function Atlanta:GetBoundingBox(BodyParts, RootPart)
 		local Size = Vector3.new(0, 0, 0)
-		
+		--
 		for Index, Value in pairs({ "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }) do
 			local Part = BodyParts[Value]
 			local PartSize = (Part and Part.Size or Atlanta.Locals.PartSizes[Value])
-			
+			--
 			if Value == "Head" then
 				Size = (Size + Vector3.new(0, PartSize.Y, 0))
 			elseif Value == "Torso" then
@@ -447,38 +447,38 @@ do
 				Size = (Size + Vector3.new(0, PartSize.Y, 0))
 			end
 		end
-		
+		--
 		return (RootPart.CFrame + Vector3.new(0, -0.125, 0)), Size
 	end
-	
+	--
 	function Atlanta:RayCast(Part, Origin, Ignore, Distance)
 		local Ignore = Ignore or {}
 		local Distance = Distance or 2000
-		
+		--
 		local Cast = Ray.new(Origin, (Part.Position - Origin).Unit * Distance)
 		local Hit = Workspace:FindPartOnRayWithIgnoreList(Cast, Ignore)
-		
+		--
 		return (Hit and Hit:IsDescendantOf(Part.Parent)) == true, Hit
 	end
-	
+	--
 	function Atlanta:GetPlayers()
 		return Players:GetPlayers()
 	end
-	
+	--
 	function Atlanta:PlayerAdded(Player)
 		Visuals:Create({ Player = Player })
 	end
-	
+	--
 	function Atlanta:GetUserID(Player)
 		return Player.UserId
 	end
-	
+	--
 	function Atlanta:GetPlayerParent(Player)
 		return Player.Parent
 	end
 end
-
-do 
+--
+do -- // Visuals
 	function Visuals:Create(Properties)
 		if Properties then
 			if Properties.Player then
@@ -506,10 +506,10 @@ do
 				}, {
 					__index = Visuals.Base,
 				})
-				
+				--
 				Self.Highlight.Parent = Storage
-				
-				do 
+				--
+				do -- Renders.Name
 					SetRenderProperty(Self.Renders.Name, "Text", Self.Player.Name)
 					SetRenderProperty(Self.Renders.Name, "Size", 13)
 					SetRenderProperty(Self.Renders.Name, "Center", true)
@@ -517,118 +517,118 @@ do
 					SetRenderProperty(Self.Renders.Name, "Font", 2)
 					SetRenderProperty(Self.Renders.Name, "Visible", false)
 				end
-				
-				do 
-					
+				--
+				do -- Renders.Box
+					-- Inline
 					SetRenderProperty(Self.Renders.BoxInline, "Thickness", 1.25)
 					SetRenderProperty(Self.Renders.BoxInline, "Filled", false)
 					SetRenderProperty(Self.Renders.BoxInline, "Visible", false)
-					
+					-- Outline
 					SetRenderProperty(Self.Renders.BoxOutline, "Thickness", 2.5)
 					SetRenderProperty(Self.Renders.BoxOutline, "Filled", false)
 					SetRenderProperty(Self.Renders.BoxOutline, "Visible", false)
-					
+					-- Fill
 					SetRenderProperty(Self.Renders.BoxFill, "Filled", false)
 					SetRenderProperty(Self.Renders.BoxFill, "Visible", false)
 				end
-				
-				do 
-					
+				--
+				do -- Renders.HealthBar
+					-- Inline
 					SetRenderProperty(Self.Renders.HealthBarInline, "Filled", true)
 					SetRenderProperty(Self.Renders.HealthBarInline, "Visible", false)
-					
+					-- Outline
 					SetRenderProperty(Self.Renders.HealthBarOutline, "Filled", true)
 					SetRenderProperty(Self.Renders.HealthBarOutline, "Visible", false)
-					
+					-- Value
 					SetRenderProperty(Self.Renders.HealthBarValue, "Size", 13)
 					SetRenderProperty(Self.Renders.HealthBarValue, "Center", false)
 					SetRenderProperty(Self.Renders.HealthBarValue, "Outline", true)
 					SetRenderProperty(Self.Renders.HealthBarValue, "Font", 2)
 					SetRenderProperty(Self.Renders.HealthBarValue, "Visible", false)
 				end
-				
-				do 
+				--
+				do -- Renders.Flags
 					SetRenderProperty(Self.Renders.Flags, "Size", 13)
 					SetRenderProperty(Self.Renders.Flags, "Center", false)
 					SetRenderProperty(Self.Renders.Flags, "Outline", true)
 					SetRenderProperty(Self.Renders.Flags, "Font", 2)
 					SetRenderProperty(Self.Renders.Flags, "Visible", false)
 				end
-				
-				do 
+				--
+				do -- Renders.Distance
 					SetRenderProperty(Self.Renders.Distance, "Size", 13)
 					SetRenderProperty(Self.Renders.Distance, "Center", true)
 					SetRenderProperty(Self.Renders.Distance, "Outline", true)
 					SetRenderProperty(Self.Renders.Distance, "Font", 2)
 					SetRenderProperty(Self.Renders.Distance, "Visible", false)
 				end
-				
-				do 
+				--
+				do -- Renders.Weapon
 					SetRenderProperty(Self.Renders.Weapon, "Size", 13)
 					SetRenderProperty(Self.Renders.Weapon, "Center", true)
 					SetRenderProperty(Self.Renders.Weapon, "Outline", true)
 					SetRenderProperty(Self.Renders.Weapon, "Font", 2)
 					SetRenderProperty(Self.Renders.Weapon, "Visible", false)
 				end
-				
-				do 
-					
+				--
+				do -- Renders.Arrow
+					-- Inline
 					SetRenderProperty(Self.Renders.Arrow, "Filled", true)
 					SetRenderProperty(Self.Renders.Arrow, "Visible", false)
-					
+					-- Outline
 					SetRenderProperty(Self.Renders.ArrowOutline, "Filled", false)
 					SetRenderProperty(Self.Renders.ArrowOutline, "Visible", false)
 					SetRenderProperty(Self.Renders.ArrowOutline, "Thickness", 1.5)
 				end
-				
+				--
 				Visuals.Bases[Properties.Player] = Self
-				
+				--
 				return Self
 			end
 		end
 	end
-	
+	--
 	function Visuals:Unload()
 		for Index, Value in pairs(Visuals.Bases) do
 			Value:Remove()
 		end
 	end
-	
+	--
 	function Visuals.Base:Remove()
 		local Self = self
-		
+		--
 		if Self then
 			setmetatable(Self, {})
-			
+			--
 			Visuals.Bases[Self.Player] = nil
-			
+			--
 			Self.Object = nil
-			
+			--
 			for Index, Value in pairs(Self.Renders) do
 				DestroyRenderObject(Value)
 			end
-			
+			--
 			Self.Highlight:Remove()
-			
+			--
 			Self.Renders = nil
 			Self.Highlight = nil
 			Self = nil
 		end
 	end
-	
+	--
 	function Visuals.Base:Opacity(State, Table)
 		local Self = self
-		
+		--
 		if Self then
 			local Renders = rawget(Self, "Renders")
-			
+			--
 			for Index, Value in pairs(typeof(Table) == "table" and Table or Renders) do
 				SetRenderProperty(typeof(Table) == "table" and Renders[Value] or Value, "Visible", State)
 			end
-			
+			--
 			Self.Highlight.Adornee = nil
 			Self.Highlight.Enabled = false
-			
+			--
 			if not State then
 				Self.Info.RootPartCFrame = nil
 				Self.Info.Health = nil
@@ -637,16 +637,16 @@ do
 			end
 		end
 	end
-	
+	--
 	function Visuals.Base:Update()
 		local Self = self
-		
+		--
 		if Self then
 			local Renders = rawget(Self, "Renders")
 			local Player = rawget(Self, "Player")
 			local Info = rawget(Self, "Info")
 			local Parent = Atlanta:GetPlayerParent(Player)
-			
+			--
 			if
 				(Player and Player ~= Client and Parent and Parent ~= nil)
 				or (Info.RootPartCFrame and Info.Health and Info.MaxHealth)
@@ -655,10 +655,10 @@ do
 					local Object, Humanoid, RootPart = Atlanta:ValidateClient(Player)
 					local BodyParts = (RootPart and Atlanta:GetBodyParts(Object, RootPart, true))
 					local TransparencyMultplier = 1
-					
+					--
 					if Object and Object.Parent and (Humanoid and RootPart and BodyParts) then
 						local Health, MaxHealth = Atlanta:GetHealth(Player, Object, Humanoid)
-						
+						--
 						if
 							(ESP.Checks.AliveCheck and not Atlanta:ClientAlive(Player, Character, Humanoid))
 							or (ESP.Checks.ForceField and Object:FindFirstChildOfClass("ForceField"))
@@ -673,14 +673,14 @@ do
 					else
 						Info.Pass = false
 					end
-					
+					--
 					if Info.Pass then
 						Info.Tick = tick()
 					else
 						local FadeOut = ESP.Extra.EspFadeOut
 						local FadeTime = FadeOut / 1000
 						local Value = Info.Tick - tick()
-						
+						--
 						if not FadeOut == 0 and Value <= FadeTime then
 							TransparencyMultplier = Clamp((Value + FadeTime) * 1 / FadeTime, 0, 1)
 						else
@@ -690,21 +690,21 @@ do
 							Info.BoundingBox = nil
 						end
 					end
-					
+					--
 					if Info.RootPartCFrame and Info.Health and Info.MaxHealth then
 						local Override = nil
 						local Orhue, Orsaturation, Orvalue = (Override or Color3.new()):ToHSV()
-						
+						--
 						local Conversion = "Studs"
-						
+						--
 						local Magnitude = (Workspace.CurrentCamera.CFrame.Position - Info.RootPartCFrame.Position).Magnitude
 						local Distance, Measurement, Rounded = Math:Conversion(Magnitude, Conversion)
 						local Position, OnScreen =
 							Workspace.CurrentCamera:WorldToViewportPoint(Info.RootPartCFrame.Position)
-						
+						--
 						local BoxSize
 						local BoxPosition
-						
+						--
 						if OnScreen then
 							MaxDistance = 1000
 							if Magnitude <= MaxDistance then
@@ -716,11 +716,11 @@ do
 								local Height = (
 									Workspace.CurrentCamera.CFrame - Workspace.CurrentCamera.CFrame.Position
 								) * Vector3.new(0, (Clamp(BoundingBox[2].Y, 1, 10) + 0.5) / 2, 0)
-								
+								--
 								if Info.Pass then
 									Info.BoundingBox = BoundingBox
 								end
-								
+								--
 								local Middle = Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position)
 								Width = Abs(
 									Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position + Width).X
@@ -730,28 +730,28 @@ do
 									Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position + Height).Y
 										- Workspace.CurrentCamera:WorldToViewportPoint(BoundingBox[1].Position - Height).Y
 								)
-								
+								--
 								BoxSize = Math:RoundVector(Vector2.new(Width, Height))
 								BoxPosition = Math:RoundVector(Vector2.new(Middle.X, Middle.Y) - (BoxSize / 2))
-								
-								do 
+								--
+								do -- Box
 									if ESP.Main.Box.Enabled then
 										local BoxColor1, BoxTransparency1 =
 											Override or ESP.Main.Box.BoxColor, (1 - 0 * TransparencyMultplier)
 										local BoxColor2, BoxTransparency2 =
 											Override or ESP.Main.Box.BoxFillColor, (1 - 0.5 * TransparencyMultplier)
-										
+										-- Inline
 										SetRenderProperty(Renders.BoxInline, "Size", BoxSize)
 										SetRenderProperty(Renders.BoxInline, "Position", BoxPosition)
 										SetRenderProperty(Renders.BoxInline, "Visible", true)
 										SetRenderProperty(Renders.BoxInline, "Color", BoxColor1)
 										SetRenderProperty(Renders.BoxInline, "Transparency", BoxTransparency1)
-										
+										-- Outline
 										SetRenderProperty(Renders.BoxOutline, "Size", BoxSize)
 										SetRenderProperty(Renders.BoxOutline, "Position", BoxPosition)
 										SetRenderProperty(Renders.BoxOutline, "Visible", true)
 										SetRenderProperty(Renders.BoxOutline, "Transparency", BoxTransparency1)
-										
+										-- Fill
 										SetRenderProperty(Renders.BoxFill, "Size", BoxSize)
 										SetRenderProperty(Renders.BoxFill, "Position", BoxPosition)
 										SetRenderProperty(Renders.BoxFill, "Visible", false)
@@ -765,8 +765,8 @@ do
 								end
 							end
 						end
-						
-						do 
+						--
+						do -- Chams
 							if ESP.Main.Chams then
 								local ChamsFill, ChamsFillTransparency =
 									Override or Flags[Selection .. "ChamsFill"]:Get().Color,
@@ -787,7 +787,7 @@ do
 										)
 									)
 								local HighlightMode = Flags[Selection .. "HighlightMode"]:Get()
-								
+								--
 								local ChamsAuto = Atlanta.Locals.SelectedPlayersSection ~= "Local"
 									and Flags[Selection .. "ChamsAuto"]:Get()
 								local ChamsVisible, ChamsVisibleTransparency =
@@ -810,7 +810,7 @@ do
 												* TransparencyMultplier
 											)
 										)
-								
+								--
 								local Visible = OnScreen
 									and (
 										RootPart ~= nil
@@ -820,11 +820,11 @@ do
 											{ Atlanta:GetCharacter(Client), Atlanta:GetIgnore(true) }
 										)
 									)
-								
+								--
 								if Info.Pass then
 									Self.Highlight.Adornee = Object
 								end
-								
+								--
 								Self.Highlight.FillColor = ChamsAuto and (Visible and ChamsVisible or ChamsHidden)
 									or ChamsFill
 								Self.Highlight.FillTransparency = ChamsAuto
@@ -839,18 +839,18 @@ do
 								Self.Highlight.Enabled = false
 							end
 						end
-						
+						--
 						if BoxSize and BoxPosition then
-							do 
+							do -- Name
 								local NameEnabled = ESP.Main.Name.Enabled
 								local INGAMENAME = ESP.Main.INGName.Enabled
 
 								if INGAMENAME then
 									local INGNameColor, INGNameTransparency =
 										Override or ESP.Main.INGName.Color, ((1 - 0) * TransparencyMultplier)
-									
+									--
 									local Text
-									
+									--
 									if
 										Player.Character:FindFirstChild("WorldHumanGui")
 										and Player.Character.WorldHumanGui:FindFirstChild("Identification")
@@ -865,8 +865,8 @@ do
 									else
 										Text = Player.Name
 									end
-									
-									SetRenderProperty(Renders.INGName, "Text", Text) 
+									--
+									SetRenderProperty(Renders.INGName, "Text", Text) -- Changed from Renders.Name to Renders.INGName
 									SetRenderProperty(
 										Renders.INGName,
 										"Position",
@@ -882,9 +882,9 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 								if NameEnabled then
 									local NameColor, NameTransparency =
 										Override or ESP.Main.Name.Color, ((1 - 0) * TransparencyMultplier)
-									
+									--
 									local Text
-									
+									--
 									if ESP.Extra.UseDisplayName then
 										Text = (
 											(
@@ -898,7 +898,7 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 									else
 										Text = Player.Name
 									end
-									
+									--
 									SetRenderProperty(Renders.Name, "Text", Text)
 									SetRenderProperty(
 										Renders.Name,
@@ -912,23 +912,23 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 									SetRenderProperty(Renders.Name, "Visible", false)
 								end
 							end
-							
-							do 
+							--
+							do -- HeatlhBar
 								local HealthBarColor1, HealthBarTransparency =
 									ESP.Main.HealthBar.HighHealthColor, ((1 - 0) * TransparencyMultplier)
 								local HealthBarColor2 = ESP.Main.HealthBar.LowHealthColor
 								local HealthBarEnabled
 								local HealthNumEnabled
-								
+								--
 								HealthBarEnabled = ESP.Main.HealthBar.Enabled
 								HealthNumEnabled = ESP.Main.HealthBar.Number
-								
+								--
 								local HealthSize = (Floor(BoxSize.Y * (Info.Health / Info.MaxHealth)))
 								local Color = Color:Lerp(Info.Health / Info.MaxHealth, HealthBarColor1, HealthBarColor2)
 								local Height = ((BoxPosition.Y + BoxSize.Y) - HealthSize)
-								
+								--
 								if HealthBarEnabled then
-									
+									-- Inline
 									SetRenderProperty(Renders.HealthBarInline, "Color", Color)
 									SetRenderProperty(Renders.HealthBarInline, "Size", Vector2.new(2, HealthSize))
 									SetRenderProperty(
@@ -938,7 +938,7 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 									)
 									SetRenderProperty(Renders.HealthBarInline, "Visible", true)
 									SetRenderProperty(Renders.HealthBarInline, "Transparency", HealthBarTransparency)
-									
+									-- Outline
 									SetRenderProperty(Renders.HealthBarOutline, "Size", Vector2.new(4, BoxSize.Y + 2))
 									SetRenderProperty(
 										Renders.HealthBarOutline,
@@ -951,11 +951,11 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 									SetRenderProperty(Renders.HealthBarInline, "Visible", false)
 									SetRenderProperty(Renders.HealthBarOutline, "Visible", false)
 								end
-								
+								--
 								if HealthNumEnabled then
-									
+									-- Value
 									local Text = Utility:ClampString(tostring(Round(Info.Health)), BoxSize.Y)
-									
+									--
 									SetRenderProperty(Renders.HealthBarValue, "Text", Text)
 									SetRenderProperty(Renders.HealthBarValue, "Color", Color)
 									SetRenderProperty(
@@ -972,15 +972,15 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 									SetRenderProperty(Renders.HealthBarValue, "Visible", false)
 								end
 							end
-							
+							--
 							local DistanceEnabled = ESP.Main.Distance.Enabled
 							local DistanceColor2 = ESP.Main.Distance.Color
-							
-							do 
+							--
+							do -- Distance
 								if DistanceEnabled then
 									local DistanceColor, DistanceTransparency =
 										Override or DistanceColor2, ((1 - 0) * TransparencyMultplier)
-									
+									--
 									SetRenderProperty(Renders.Distance, "Text", ("%s%s"):format(Rounded, Measurement))
 									SetRenderProperty(
 										Renders.Distance,
@@ -994,18 +994,18 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 									SetRenderProperty(Renders.Distance, "Visible", false)
 								end
 							end
-							
-							do 
+							--
+							do -- Weapon
 								local WeaponEnabled = ESP.Main.Tool.Enabled
 								local ToolColor = ESP.Main.Tool.Color
-								
+								--
 								if WeaponEnabled then
 									local WeaponColor, WeaponTransparency =
 										Override and Color3.fromHSV(Orhue, Orsaturation, Orvalue - 0.2) or ToolColor,
 										((1 - 0) * TransparencyMultplier)
-									
+									--
 									local Tool = Object:FindFirstChildOfClass("Tool")
-									
+									--
 									SetRenderProperty(
 										Renders.Weapon,
 										"Text",
@@ -1027,21 +1027,21 @@ BoxPosition + Vector2.new((BoxSize.X / 2) - 50, -(13 + 4 + 10))									)
 									SetRenderProperty(Renders.Weapon, "Visible", false)
 								end
 							end
-							
+							--
 							return
 						end
 					end
 				end
-				
+				--
 				return Self:Opacity(false)
 			end
-			
+			--
 			return Self:Remove()
 		end
 	end
 end
-
-do 
+--
+do -- // Connections
 	Utility:Connection(RunService.RenderStepped, function()
 		for Index, Value in pairs(Visuals.Bases) do
 			Utility:ThreadFunction(function()
@@ -1049,14 +1049,14 @@ do
 			end, "3x02")
 		end
 	end)
-	
+	--
 	Utility:Connection(Players.ChildAdded, function(Child)
 		Atlanta:PlayerValid(Child, function(Validated)
 			Atlanta:PlayerAdded(Validated)
 		end)
 	end)
 end
-
+--
 for Index, Player in pairs(Atlanta:GetPlayers()) do
 	Atlanta:PlayerValid(Player, function(Validated)
 		Atlanta:PlayerAdded(Validated)
